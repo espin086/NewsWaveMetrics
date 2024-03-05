@@ -10,7 +10,7 @@ def create_stock_table():
 
     try:
         c.execute(
-            f"""CREATE TABLE IF NOT EXISTS {config.TABLT_STOCK_DATA}
+            f"""CREATE TABLE IF NOT EXISTS {config.TABLE_STOCK_DATA}
                     (date TEXT,
                     ticker TEXT,
                     open_price REAL,
@@ -24,7 +24,7 @@ def create_stock_table():
         conn.commit()
         logging.info(
             "Successfully created or ensured the table %s exists.",
-            config.TABLT_STOCK_DATA,
+            config.TABLE_STOCK_DATA,
         )
     except Exception as e:
         logging.error("Failed to create table: %s", e)
@@ -44,7 +44,7 @@ def upload_stock_to_db(df):
 
             # Check if the primary key (date, ticker) exists in the database
             c.execute(
-                f"SELECT * FROM {config.TABLT_STOCK_DATA} WHERE date=? AND ticker=?",
+                f"SELECT * FROM {config.TABLE_STOCK_DATA} WHERE date=? AND ticker=?",
                 (date_value, ticker_value),
             )
             result = c.fetchone()
@@ -56,7 +56,7 @@ def upload_stock_to_db(df):
             else:
                 # Insert new row into the database
                 c.execute(
-                    f"INSERT INTO {config.TABLT_STOCK_DATA} (date, ticker, open_price, high_price, low_price, closing_price, volume) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                    f"INSERT INTO {config.TABLE_STOCK_DATA} (date, ticker, open_price, high_price, low_price, closing_price, volume) VALUES (?, ?, ?, ?, ?, ?, ?)",
                     (
                         date_value,
                         ticker_value,
