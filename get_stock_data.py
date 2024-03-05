@@ -2,6 +2,7 @@ import yfinance as yf
 import logging
 import config
 import pandas as pd
+from datetime import date, timedelta
 
 
 def get_daily_stock_data(tickerSymbol,start_date,end_date):
@@ -37,3 +38,11 @@ def get_daily_stock_data(tickerSymbol,start_date,end_date):
         logging.error("An error occurred in the extract function: %s", str(e))
 
     return selected_tickerDf
+
+if __name__ == "__main__":
+    logging.info("Application started.")
+    end_date = date.today()
+    start_date = end_date - timedelta(days=5 * 365)
+    stocks_data = get_daily_stock_data("DIS",start_date,end_date)
+    print(stocks_data)
+    logging.info("Application finished.")
