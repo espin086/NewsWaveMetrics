@@ -7,6 +7,7 @@ def load(stock_data):
     This function loads the dataframe to the database.
     """
     logging.info("Loading Function Initiated")
+    print(stock_data)
     # Creating the db and table 
     create_stock_table()
     # Uploading the data to db
