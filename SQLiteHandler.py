@@ -37,48 +37,6 @@ def upload_stock_to_db(df):
     conn = sqlite3.connect(config.DATABASE)
     c = conn.cursor()
 
-    # for _, row in df.iterrows():
-    #     try:
-    #         date_value = row.get("Date")
-    #         ticker_value = row.get("Ticker")
-
-    #         print("DEBUG: date_value:", date_value, "ticker_value:", ticker_value)
-
-    #         if date_value is None or ticker_value is None:
-    #             logging.warning("Skipping row with missing date or ticker values.")
-    #             continue
-
-    #         # Check if the primary key (date, ticker) exists in the database
-    #         c.execute(
-    #             f"SELECT * FROM {config.TABLE_STOCK_DATA} WHERE date=? AND ticker=?",
-    #             (date_value, ticker_value),
-    #         )
-    #         result = c.fetchone()
-
-    #         if result:
-    #             logging.warning(
-    #                 "%s %s already in the database, skipping...", date_value, ticker_value
-    #             )
-    #         else:
-    #             # Insert new row into the database
-    #             c.execute(
-    #                 f"INSERT INTO {config.TABLE_STOCK_DATA} (date, ticker, open_price, high_price, low_price, closing_price, volume) VALUES (?, ?, ?, ?, ?, ?, ?)",
-    #                 (
-    #                     date_value,
-    #                     ticker_value,
-    #                     row.get("Open", ""),
-    #                     row.get("High", ""),
-    #                     row.get("Low", ""),
-    #                     row.get("Close", ""),
-    #                     row.get("Volume", ""),
-    #                 ),
-    #             )
-    #             conn.commit()
-    #             logging.info(
-    #                 "UPLOADED: %s %s uploaded to the database", date_value, ticker_value
-    #             )
-    #     except Exception as e:
-    #         logging.error("Skipping row due to error: %s", e)
     for _, row in df.iterrows():
         try:
             date_value = row.get("Date", "")
