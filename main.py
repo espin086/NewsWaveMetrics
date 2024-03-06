@@ -93,10 +93,11 @@ if st.button("Run Search"):
     end_date = date.today()
     start_date = end_date - timedelta(days=5 * 365)
     stocks_data = get_daily_stock_data(ticker_input,start_date,end_date)
-    print(stocks_data.columns)
-    print(stocks_data)
-    load(stocks_data)
-    st.success("Search complete!")
+    if stocks_data.empty:
+        st.error("No data is available for this ticker.")
+    else:
+        load(stocks_data)
+        st.success("Search complete!")
 
 if st.button("Query DB"):
     st.session_state['data_queried'] = True
