@@ -154,7 +154,7 @@ def handle_visualization():
 
 logging.basicConfig(level=logging.INFO)
 
-st.title("Fetch and Store Stock Data")
+st.title("Store and Visualize Stock Data")
 
 ticker_input = st.text_input("Enter the Ticker Symbol:")
 
