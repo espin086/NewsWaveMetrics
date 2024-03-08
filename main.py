@@ -141,9 +141,7 @@ def handle_visualization():
             # Filter data for the selected ticker and cache it
             selected_data = df[df['Ticker'] == selected_ticker].copy()
             selected_data = selected_data.set_index("Date")
-            print(selected_data)
             signals = moving_average_strategy(selected_data, short_window, long_window)
-            print(signals)
             st.session_state[cache_key] = (selected_data, signals)
 
         # Retrieve cached data
