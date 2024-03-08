@@ -12,6 +12,7 @@ from pandas.api.types import (
     is_numeric_dtype,
     is_object_dtype,
 )
+from moving_average import moving_average_strategy, plot_stock_data
 
 if 'data_queried' not in st.session_state:
     st.session_state['data_queried'] = False    
@@ -83,24 +84,7 @@ def filter_dataframe(df: pd.DataFrame) -> pd.DataFrame:
                 df = df[df[column].str.contains(user_text_input)]
     return df
 
-logging.basicConfig(level=logging.INFO)
-
-st.title("Fetch and Store Stock Data")
-
-ticker_input = st.text_input("Enter the Ticker Symbol:")
-
-if st.button("Run Search"):
-    end_date = date.today()
-    start_date = end_date - timedelta(days=5 * 365)
-    stocks_data = get_daily_stock_data(ticker_input,start_date,end_date)
-    if stocks_data.empty:
-        st.error("No data is available for this ticker.")
-    else:
-        load(stocks_data)
-        st.success("Search complete!")
-
-if st.button("Query DB"):
-    st.session_state['data_queried'] = True
+def query_stock_data():
     try:
         # Connect to SQLite database
         conn = sqlite3.connect(config.DATABASE)
@@ -118,11 +102,73 @@ if st.button("Query DB"):
             FROM stock_data 
             ORDER BY date DESC, ticker DESC
         """
-        st.session_state['query_result'] = pd.read_sql(query, conn)
+        data = pd.read_sql(query, conn)
         conn.close()
+        return data
 
     except Exception as e:
         st.error(f"An error occurred: {e}")
+        return pd.DataFrame()
+    
+# Function to fetch or get cached data
+def get_or_fetch_data():
+    st.session_state.query_result = query_stock_data()
+    return st.session_state.query_result
+
+# Function to handle visualization
+def handle_visualization():
+    if 'visualize_clicked' not in st.session_state:
+        st.session_state.visualize_clicked = False
+
+    if st.button("Visualize"):
+        st.session_state.visualize_clicked = True
+
+    if st.session_state.visualize_clicked:
+
+        df = get_or_fetch_data()
+        
+        # Query unique tickers from the database
+        unique_tickers = df['Ticker'].unique()
+        selected_ticker = st.selectbox("Select Ticker", unique_tickers, key="ticker_select")
+
+        # User input for moving average window parameters
+        short_window = st.slider("Select short-term moving average window:", 1, 50, 10, key="short_window")
+        long_window = st.slider("Select long-term moving average window:", 1, 200, 50, key="long_window")
+
+        # Cache the selected data to prevent re-computation
+        cache_key = f"{selected_ticker}_{short_window}_{long_window}"
+        if cache_key not in st.session_state:
+            # Filter data for the selected ticker and cache it
+            selected_data = df[df['Ticker'] == selected_ticker].copy()
+            selected_data = selected_data.set_index("Date")
+            signals = moving_average_strategy(selected_data, short_window, long_window)
+            st.session_state[cache_key] = (selected_data, signals)
+
+        # Retrieve cached data
+        selected_data, signals = st.session_state[cache_key]
+
+        # Display stock data and trading signals
+        plot_stock_data(selected_data, signals)
+
+logging.basicConfig(level=logging.INFO)
+
+st.title("Store and Visualize Stock Data")
+
+ticker_input = st.text_input("Enter the Ticker Symbol:")
+
+if st.button("Run Search"):
+    end_date = date.today()
+    start_date = end_date - timedelta(days=5 * 365)
+    stocks_data = get_daily_stock_data(ticker_input,start_date,end_date)
+    if stocks_data.empty:
+        st.error("No data is available for this ticker.")
+    else:
+        load(stocks_data)
+        st.success("Search complete!")
+
+if st.button("Query DB"):
+    st.session_state['data_queried'] = True
+    st.session_state['query_result'] = query_stock_data()
     
 if st.session_state['data_queried']:
     filtered_df = filter_dataframe(st.session_state['query_result'])
@@ -135,3 +181,5 @@ if st.session_state['data_queried']:
         st.session_state['filtered_result'] = filtered_df
 
     st.dataframe(filtered_df)
+
+handle_visualization()
