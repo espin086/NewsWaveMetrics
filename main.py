@@ -112,8 +112,7 @@ def query_stock_data():
     
 # Function to fetch or get cached data
 def get_or_fetch_data():
-    if 'query_result' not in st.session_state:
-        st.session_state.query_result = query_stock_data()
+    st.session_state.query_result = query_stock_data()
     return st.session_state.query_result
 
 # Function to handle visualization
@@ -125,7 +124,7 @@ def handle_visualization():
         st.session_state.visualize_clicked = True
 
     if st.session_state.visualize_clicked:
-        # Assuming query_stock_data() is expensive, call it conditionally
+
         df = get_or_fetch_data()
         
         # Query unique tickers from the database
@@ -141,7 +140,10 @@ def handle_visualization():
         if cache_key not in st.session_state:
             # Filter data for the selected ticker and cache it
             selected_data = df[df['Ticker'] == selected_ticker].copy()
+            selected_data = selected_data.set_index("Date")
+            print(selected_data)
             signals = moving_average_strategy(selected_data, short_window, long_window)
+            print(signals)
             st.session_state[cache_key] = (selected_data, signals)
 
         # Retrieve cached data
