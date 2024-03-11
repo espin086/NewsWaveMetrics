@@ -14,6 +14,7 @@ from pandas.api.types import (
 )
 from moving_average import moving_average_strategy, plot_stock_data
 
+
 for key in ['data_fetched', 'query_result', 'displayed_data']:
     if key not in st.session_state:
         st.session_state[key] = False if key == 'data_fetched' else pd.DataFrame()
@@ -53,7 +54,7 @@ def query_stock_data(ticker_input):
     except Exception as e:
         st.error(f"An error occurred: {e}")
         return pd.DataFrame()
-    
+
 def filter_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     modify = st.checkbox("Add filters to table", key='add_filter')
     if not modify:
@@ -82,8 +83,8 @@ def filter_dataframe(df: pd.DataFrame) -> pd.DataFrame:
             # Ensure that the default list does not contain NaN
             user_cat_input = right.multiselect(
                 f"Values for {column}",
-                options=unique_values,  # Use the filtered list of unique values
-                default=unique_values,  # Default to all unique values (excluding NaN)
+                options=unique_values, 
+                default=unique_values, 
             )
             df = df[df[column].isin(user_cat_input)]
         elif is_numeric_dtype(df[column]):
@@ -111,61 +112,31 @@ def filter_dataframe(df: pd.DataFrame) -> pd.DataFrame:
                 df = df[df[column].str.contains(user_text_input)]
     return df
 
-
-# Function to handle visualization
-def handle_visualization(ticker_input):
-
-    df = get_or_fetch_data(ticker_input)
-
-    # User input for moving average window parameters
-    short_window = st.slider("Select short-term moving average window:", 1, 50, 10, key="short_window")
-    long_window = st.slider("Select long-term moving average window:", 1, 200, 50, key="long_window")
-
-    # Cache the selected data to prevent re-computation
-    cache_key = f"{short_window}_{long_window}"
-    if cache_key not in st.session_state:
-        # Filter data for the selected ticker and cache it
-        selected_data = df.copy()
-        selected_data = selected_data.set_index("Date")
-        signals = moving_average_strategy(selected_data, short_window, long_window)
-        st.session_state[cache_key] = (selected_data, signals)
-
-    # Retrieve cached data
-    selected_data, signals = st.session_state[cache_key]
-
-    # Display stock data and trading signals
-    plot_stock_data(selected_data, signals)
-
-logging.basicConfig(level=logging.INFO)
-
 st.title("Store and Visualize Stock Data")
-
-ticker_input = st.text_input("Enter the Ticker Symbol:")
+ticker_input = st.text_input("Enter the Ticker Symbol:", key="ticker_input")
 
 if st.button("Analyze"):
-    if not ticker_input:
-        st.error("Please enter a valid Ticker Symbol.")
-    else:
-        end_date = date.today()
-        start_date = end_date - timedelta(days=10 * 365)
-        stocks_data = get_daily_stock_data(ticker_input,start_date,end_date)
-        if stocks_data.empty:
-            st.error("No data is available for this ticker.")
-        else:
-            load(stocks_data)
-            st.success("Search complete!")
-            if st.session_state['query_result'].empty:
-                st.session_state['data_queried'] = True
-                st.session_state['query_result'] = query_stock_data(ticker_input)
-        if st.session_state['data_queried']:
-            filtered_df = filter_dataframe(st.session_state['query_result'])
+    end_date = date.today()
+    start_date = end_date - timedelta(days=365 * 10)  # Example: 5 years of data
+    if ticker_input and fetch_and_store_data(ticker_input, start_date, end_date):
+        st.session_state['data_fetched'] = True
+        st.session_state['query_result'] = query_stock_data(ticker_input)
 
-            # Check if filters have changed
-            if 'filtered_result' not in st.session_state or st.session_state['filtered_result'].shape[0] != filtered_df.shape[0]:
-                st.session_state['filtered_result'] = filtered_df
+if st.session_state['data_fetched']:
+    # Apply filters to the dataframe for display
+    st.session_state['displayed_data'] = filter_dataframe(st.session_state['query_result'])
+    st.write("Filtered Table:")
+    st.dataframe(st.session_state['displayed_data'])
 
-            else:
-                st.session_state['filtered_result'] = filtered_df
+    # Display moving average window inputs above the graph, in the main page area
+    st.write("Graph Controls:")
+    short_window = st.slider("Short-term window", 1, 50, 10, key="short_window_new")
+    long_window = st.slider("Long-term window", 1, 200, 50, key="long_window_new")
 
-            st.dataframe(filtered_df)
-            handle_visualization(ticker_input)
+    # Assuming you want to use the original (unfiltered) dataset for the graph
+    if not st.session_state['query_result'].empty:
+        df_for_graph = st.session_state['query_result'].copy()
+        df_for_graph['Date'] = pd.to_datetime(df_for_graph['Date'])
+        df_for_graph.set_index('Date', inplace=True)
+        signals = moving_average_strategy(df_for_graph, short_window, long_window)
+        plot_stock_data(df_for_graph, signals)
