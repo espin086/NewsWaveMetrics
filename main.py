@@ -14,24 +14,51 @@ from pandas.api.types import (
 )
 from moving_average import moving_average_strategy, plot_stock_data
 
-if 'data_queried' not in st.session_state:
-    st.session_state['data_queried'] = False    
+for key in ['data_fetched', 'query_result', 'displayed_data']:
+    if key not in st.session_state:
+        st.session_state[key] = False if key == 'data_fetched' else pd.DataFrame()
 
-if 'query_result' not in st.session_state:
-    st.session_state['query_result'] = pd.DataFrame()
+def fetch_and_store_data(ticker, start_date, end_date):
+    stocks_data = get_daily_stock_data(ticker, start_date, end_date)
+    if not stocks_data.empty:
+        load(stocks_data)
+        st.success("Data fetched and stored successfully.")
+        return True
+    else:
+        st.error("No data available for the provided ticker.")
+        return False
 
-if 'filtered_result' not in st.session_state:
-    st.session_state['filtered_result'] = pd.DataFrame()
+def query_stock_data(ticker_input):
+    try:
+        # Connect to SQLite database
+        conn = sqlite3.connect(config.DATABASE)
 
+        # Perform SQL query for the specific ticker
+        query = f"""
+            SELECT 
+                cast(date as TEXT) as Date,
+                ticker as Ticker,
+                open_price as Open_Price,
+                high_price as High_Price,
+                low_price as Low_Price,
+                closing_price as Closing_Price,
+                volume as Volume
+            FROM stock_data 
+            WHERE ticker = '{ticker_input}'
+            ORDER BY date DESC, ticker DESC
+        """
+        data = pd.read_sql(query, conn)
+        conn.close()
+        return data
+    except Exception as e:
+        st.error(f"An error occurred: {e}")
+        return pd.DataFrame()
+    
 def filter_dataframe(df: pd.DataFrame) -> pd.DataFrame:
-
-    modify = st.checkbox("Add filters")
-
+    modify = st.checkbox("Add filters to table", key='add_filter')
     if not modify:
         return df
-
     df = df.copy()
-
     # Try to convert datetimes into a standard format (datetime, no timezone)
     for col in df.columns:
         if pd.api.types.is_object_dtype(df[col]):
@@ -84,37 +111,6 @@ def filter_dataframe(df: pd.DataFrame) -> pd.DataFrame:
                 df = df[df[column].str.contains(user_text_input)]
     return df
 
-def query_stock_data(ticker_input):
-    try:
-        # Connect to SQLite database
-        conn = sqlite3.connect(config.DATABASE)
-
-        # Perform SQL query for the specific ticker
-        query = f"""
-            SELECT 
-                cast(date as TEXT) as Date,
-                ticker as Ticker,
-                open_price as Open_Price,
-                high_price as High_Price,
-                low_price as Low_Price,
-                closing_price as Closing_Price,
-                volume as Volume
-            FROM stock_data 
-            WHERE ticker = '{ticker_input}'
-            ORDER BY date DESC, ticker DESC
-        """
-        data = pd.read_sql(query, conn)
-        conn.close()
-        return data
-
-    except Exception as e:
-        st.error(f"An error occurred: {e}")
-        return pd.DataFrame()
-    
-# Function to fetch or get cached data
-def get_or_fetch_data(ticker_input):
-    st.session_state.query_result = query_stock_data(ticker_input)
-    return st.session_state.query_result
 
 # Function to handle visualization
 def handle_visualization(ticker_input):
