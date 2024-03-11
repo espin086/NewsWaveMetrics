@@ -14,24 +14,52 @@ from pandas.api.types import (
 )
 from moving_average import moving_average_strategy, plot_stock_data
 
-if 'data_queried' not in st.session_state:
-    st.session_state['data_queried'] = False    
 
-if 'query_result' not in st.session_state:
-    st.session_state['query_result'] = pd.DataFrame()
+for key in ['data_fetched', 'query_result', 'displayed_data']:
+    if key not in st.session_state:
+        st.session_state[key] = False if key == 'data_fetched' else pd.DataFrame()
 
-if 'filtered_result' not in st.session_state:
-    st.session_state['filtered_result'] = pd.DataFrame()
+def fetch_and_store_data(ticker, start_date, end_date):
+    stocks_data = get_daily_stock_data(ticker, start_date, end_date)
+    if not stocks_data.empty:
+        load(stocks_data)
+        st.success("Data fetched and stored successfully.")
+        return True
+    else:
+        st.error("No data available for the provided ticker.")
+        return False
+
+def query_stock_data(ticker_input):
+    try:
+        # Connect to SQLite database
+        conn = sqlite3.connect(config.DATABASE)
+
+        # Perform SQL query for the specific ticker
+        query = f"""
+            SELECT 
+                cast(date as TEXT) as Date,
+                ticker as Ticker,
+                open_price as Open_Price,
+                high_price as High_Price,
+                low_price as Low_Price,
+                closing_price as Closing_Price,
+                volume as Volume
+            FROM stock_data 
+            WHERE ticker = '{ticker_input}'
+            ORDER BY date DESC, ticker DESC
+        """
+        data = pd.read_sql(query, conn)
+        conn.close()
+        return data
+    except Exception as e:
+        st.error(f"An error occurred: {e}")
+        return pd.DataFrame()
 
 def filter_dataframe(df: pd.DataFrame) -> pd.DataFrame:
-
-    modify = st.checkbox("Add filters")
-
+    modify = st.checkbox("Add filters to table", key='add_filter')
     if not modify:
         return df
-
     df = df.copy()
-
     # Try to convert datetimes into a standard format (datetime, no timezone)
     for col in df.columns:
         if pd.api.types.is_object_dtype(df[col]):
@@ -55,8 +83,8 @@ def filter_dataframe(df: pd.DataFrame) -> pd.DataFrame:
             # Ensure that the default list does not contain NaN
             user_cat_input = right.multiselect(
                 f"Values for {column}",
-                options=unique_values,  # Use the filtered list of unique values
-                default=unique_values,  # Default to all unique values (excluding NaN)
+                options=unique_values, 
+                default=unique_values, 
             )
             df = df[df[column].isin(user_cat_input)]
         elif is_numeric_dtype(df[column]):
@@ -84,102 +112,31 @@ def filter_dataframe(df: pd.DataFrame) -> pd.DataFrame:
                 df = df[df[column].str.contains(user_text_input)]
     return df
 
-def query_stock_data():
-    try:
-        # Connect to SQLite database
-        conn = sqlite3.connect(config.DATABASE)
-
-        # Perform SQL query
-        query = """
-            SELECT 
-                cast(date as TEXT) as Date,
-                ticker as Ticker,
-                open_price as Open_Price,
-                high_price as High_Price,
-                low_price as Low_Price,
-                closing_price as Closing_Price,
-                volume as Volume
-            FROM stock_data 
-            ORDER BY date DESC, ticker DESC
-        """
-        data = pd.read_sql(query, conn)
-        conn.close()
-        return data
-
-    except Exception as e:
-        st.error(f"An error occurred: {e}")
-        return pd.DataFrame()
-    
-# Function to fetch or get cached data
-def get_or_fetch_data():
-    st.session_state.query_result = query_stock_data()
-    return st.session_state.query_result
-
-# Function to handle visualization
-def handle_visualization():
-    if 'visualize_clicked' not in st.session_state:
-        st.session_state.visualize_clicked = False
-
-    if st.button("Visualize"):
-        st.session_state.visualize_clicked = True
-
-    if st.session_state.visualize_clicked:
-
-        df = get_or_fetch_data()
-        
-        # Query unique tickers from the database
-        unique_tickers = df['Ticker'].unique()
-        selected_ticker = st.selectbox("Select Ticker", unique_tickers, key="ticker_select")
-
-        # User input for moving average window parameters
-        short_window = st.slider("Select short-term moving average window:", 1, 50, 10, key="short_window")
-        long_window = st.slider("Select long-term moving average window:", 1, 200, 50, key="long_window")
-
-        # Cache the selected data to prevent re-computation
-        cache_key = f"{selected_ticker}_{short_window}_{long_window}"
-        if cache_key not in st.session_state:
-            # Filter data for the selected ticker and cache it
-            selected_data = df[df['Ticker'] == selected_ticker].copy()
-            selected_data = selected_data.set_index("Date")
-            signals = moving_average_strategy(selected_data, short_window, long_window)
-            st.session_state[cache_key] = (selected_data, signals)
-
-        # Retrieve cached data
-        selected_data, signals = st.session_state[cache_key]
-
-        # Display stock data and trading signals
-        plot_stock_data(selected_data, signals)
-
-logging.basicConfig(level=logging.INFO)
-
 st.title("Store and Visualize Stock Data")
+ticker_input = st.text_input("Enter the Ticker Symbol:", key="ticker_input")
 
-ticker_input = st.text_input("Enter the Ticker Symbol:")
-
-if st.button("Run Search"):
+if st.button("Analyze"):
     end_date = date.today()
-    start_date = end_date - timedelta(days=5 * 365)
-    stocks_data = get_daily_stock_data(ticker_input,start_date,end_date)
-    if stocks_data.empty:
-        st.error("No data is available for this ticker.")
-    else:
-        load(stocks_data)
-        st.success("Search complete!")
+    start_date = end_date - timedelta(days=365 * 10)  # Example: 5 years of data
+    if ticker_input and fetch_and_store_data(ticker_input, start_date, end_date):
+        st.session_state['data_fetched'] = True
+        st.session_state['query_result'] = query_stock_data(ticker_input)
 
-if st.button("Query DB"):
-    st.session_state['data_queried'] = True
-    st.session_state['query_result'] = query_stock_data()
-    
-if st.session_state['data_queried']:
-    filtered_df = filter_dataframe(st.session_state['query_result'])
+if st.session_state['data_fetched']:
+    # Apply filters to the dataframe for display
+    st.session_state['displayed_data'] = filter_dataframe(st.session_state['query_result'])
+    st.write("Filtered Table:")
+    st.dataframe(st.session_state['displayed_data'])
 
-    # Check if filters have changed
-    if 'filtered_result' not in st.session_state or st.session_state['filtered_result'].shape[0] != filtered_df.shape[0]:
-        st.session_state['filtered_result'] = filtered_df
+    # Display moving average window inputs above the graph, in the main page area
+    st.write("Graph Controls:")
+    short_window = st.slider("Short-term window", 1, 50, 10, key="short_window_new")
+    long_window = st.slider("Long-term window", 1, 200, 50, key="long_window_new")
 
-    else:
-        st.session_state['filtered_result'] = filtered_df
-
-    st.dataframe(filtered_df)
-
-handle_visualization()
+    # Assuming you want to use the original (unfiltered) dataset for the graph
+    if not st.session_state['query_result'].empty:
+        df_for_graph = st.session_state['query_result'].copy()
+        df_for_graph['Date'] = pd.to_datetime(df_for_graph['Date'])
+        df_for_graph.set_index('Date', inplace=True)
+        signals = moving_average_strategy(df_for_graph, short_window, long_window)
+        plot_stock_data(df_for_graph, signals)
