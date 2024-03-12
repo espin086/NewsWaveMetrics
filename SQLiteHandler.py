@@ -31,6 +31,37 @@ def create_stock_table():
     finally:
         conn.close()
 
+def create_news_table():
+    """Create the database if it doesn't exist."""
+    logging.info("Checking and creating database if not present.")
+    conn = sqlite3.connect(config.DATABASE)
+    c = conn.cursor()
+
+    try:
+        c.execute(
+            f"""CREATE TABLE IF NOT EXISTS {config.TABLE_NEWS_DATA}
+                    (title TEXT,
+                    top_image TEXT,
+                    Videos TEXT,
+                    url TEXT,
+                    date TEXT,
+                    short_description TEXT,
+                    text TEXT,
+                    source TEXT,
+                    sentiment TEXT
+                    PRIMARY KEY (title, date)
+                    )"""
+        )
+        conn.commit()
+        logging.info(
+            "Successfully created or ensured the table %s exists.",
+            config.TABLE_NEWS_DATA,
+        )
+    except Exception as e:
+        logging.error("Failed to create table: %s", e)
+    finally:
+        conn.close()
+
 def upload_stock_to_db(df):
     """Check if the primary key exists in the database and upload data if not."""
     logging.info("Starting upload to database.")
