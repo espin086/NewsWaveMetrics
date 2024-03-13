@@ -18,8 +18,8 @@ SELECTED_COLUMNS = [
 ]
 
 # === API Configs ===
-News_SEARCH_URL = "https://jsearch.p.rapidapi.com/search"
-News_SEARCH_X_RAPIDAPI_HOST = "jsearch.p.rapidapi.com"
+News_SEARCH_URL = "https://newsnow.p.rapidapi.com/newsv2"
+News_SEARCH_X_RAPIDAPI_HOST = "newsnow.p.rapidapi.com"
 
 # Pagination for API calls
 PAGES = 10
