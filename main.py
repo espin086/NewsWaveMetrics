@@ -5,7 +5,7 @@ import sqlite3
 import pandas as pd
 from datetime import date, timedelta
 from get_stock_data import get_daily_stock_data
-from load_stock_data import load
+from load import load_stock_data
 from pandas.api.types import (
     is_categorical_dtype,
     is_datetime64_any_dtype,
@@ -22,7 +22,7 @@ for key in ['data_fetched', 'query_result', 'displayed_data']:
 def fetch_and_store_data(ticker, start_date, end_date):
     stocks_data = get_daily_stock_data(ticker, start_date, end_date)
     if not stocks_data.empty:
-        load(stocks_data)
+        load_stock_data(stocks_data)
         st.success("Data fetched and stored successfully.")
         return True
     else:
