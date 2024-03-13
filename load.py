@@ -1,6 +1,17 @@
 import config
 import logging
-from SQLiteHandler import create_stock_table, upload_stock_to_db, create_news_table
+import pprint
+from file_handler import FileHandler
+from SQLiteHandler import create_stock_table, upload_stock_to_db, create_news_table, upload_news_to_db
+
+pp = pprint.PrettyPrinter(indent=4)
+logging.basicConfig(
+    level=config.LOGGING_LEVEL, format="%(asctime)s - %(levelname)s - %(message)s"
+)
+
+file_handler = FileHandler(
+    raw_path=config.RAW_DATA_PATH, processed_path=config.PROCESSED_DATA_PATH
+)
 
 def load_stock_data(stock_data):
     """
@@ -20,4 +31,4 @@ def load_news_data():
     logging.info("Main loading function initiated.")
     data = file_handler.load_json_files(directory=config.PROCESSED_DATA_PATH)
     create_news_table()
-    check_and_upload_to_db(json_list=data)
+    upload_news_to_db(json_list=data)

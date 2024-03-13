@@ -1,6 +1,7 @@
 import logging
 import sqlite3
 import config
+from sentiment_analysis import analyze_sentiments
 
 def create_stock_table():
     """Create the database if it doesn't exist."""
@@ -42,7 +43,7 @@ def create_news_table():
             f"""CREATE TABLE IF NOT EXISTS {config.TABLE_NEWS_DATA}
                     (title TEXT,
                     top_image TEXT,
-                    Videos TEXT,
+                    videos TEXT,
                     url TEXT,
                     date TEXT,
                     short_description TEXT,
@@ -104,5 +105,57 @@ def upload_stock_to_db(df):
                 )
         except Exception as e:
             logging.error("Skipping row due to error: %s", e)
+
+    conn.close()
+
+def upload_news_to_db(json_list):
+    """Check if the primary key exists in the database and upload data if not."""
+    logging.info("Starting upload to database.")
+    conn = sqlite3.connect(config.DATABASE)
+    c = conn.cursor()
+
+    for item in json_list:
+        try:
+            date = item["date"]
+            title = item["title"]
+            
+            c.execute(
+                f"SELECT * FROM {config.TABLE_NEWS_DATA} WHERE date=? AND title=?",
+                (date, title),
+            )
+            result = c.fetchone()
+
+            if result:
+                logging.warning(
+                    "%s %s already in the database, skipping...", date, title
+                )
+            else:
+                logging.info("Generating Sentiment Analysis for %s", title)
+                sentiment = analyze_sentiments(
+                    item.get("text", "")
+                )
+                logging.info("Embeddings generated for %s", title)
+                c.execute(
+                    f"INSERT INTO {config.TABLE_NEWS_DATA} (title, top_image, videos, url, date, short_description, text, source, sentiment) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    (
+                        item.get("title", ""),
+                        item.get("top_image", ""),
+                        item.get("videos", ""),
+                        item.get("url", ""),
+                        item.get("date", ""),
+                        item.get("short_description", ""),
+                        item.get("text", ""),
+                        item.get("source", ""),
+                        str(sentiment),
+                    ),
+                )
+                conn.commit()
+                logging.info(
+                    "UPLOADED: %s uploaded to the database", title
+                )
+        except KeyError as e:
+            logging.error("Skipping item due to missing key: %s", e)
+        except Exception as e:
+            logging.error("Skipping item due to error: %s", e)
 
     conn.close()

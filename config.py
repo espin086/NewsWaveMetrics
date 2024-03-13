@@ -1,7 +1,14 @@
 import logging
+from pathlib import Path
+import os
 
 # === General Configs ===
 LOGGING_LEVEL = logging.INFO
+
+# === Data Configs ===
+CWD_PATH = Path(os.getcwd())
+RAW_DATA_PATH = Path(f"{CWD_PATH}/temp/data/raw").resolve()
+PROCESSED_DATA_PATH = Path(f"{CWD_PATH}/temp/data/processed").resolve()
 
 # === Database Configs ===
 DATABASE = "news_wave_metrics.db"
