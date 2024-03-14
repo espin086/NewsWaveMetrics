@@ -121,7 +121,7 @@ class FileHandler:
             with open(file_path, "w", encoding="utf-8") as f:
                 json.dump(data, f)
 
-            logging.info("Saved job successfully.")
+            logging.info("Saved News successfully.")
             logging.debug("Saved data to %s", file_path)
 
         except Exception as e:

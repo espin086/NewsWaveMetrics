@@ -33,4 +33,5 @@ def load_news_data():
     create_news_table()
     upload_news_to_db(json_list=data)
 
-load_news_data()
+if __name__ == "__main__":
+    load_news_data()

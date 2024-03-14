@@ -39,7 +39,7 @@ def get_all_news(search_term, pages, start_date, end_date):
                 news = future.result()
                 if news:
                     all_news.extend(news)
-                    logging.debug("Appended %d jobs for page %d", len(news), page)
+                    logging.debug("Appended %d news for page %d", len(news), page)
                     for news in all_news:
                         file_handler.save_data(
                             data=news,
