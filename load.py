@@ -32,3 +32,5 @@ def load_news_data():
     data = file_handler.load_json_files(directory=config.PROCESSED_DATA_PATH)
     create_news_table()
     upload_news_to_db(json_list=data)
+
+load_news_data()

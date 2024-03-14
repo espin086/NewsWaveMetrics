@@ -1,7 +1,7 @@
 import logging
 import sqlite3
 import config
-from sentiment_analysis import analyze_sentiments
+from sentiment_analysis import analyze_sentiment
 
 def create_stock_table():
     """Create the database if it doesn't exist."""
@@ -49,7 +49,7 @@ def create_news_table():
                     short_description TEXT,
                     text TEXT,
                     source TEXT,
-                    sentiment TEXT
+                    sentiment TEXT,
                     PRIMARY KEY (title, date)
                     )"""
         )
@@ -131,18 +131,18 @@ def upload_news_to_db(json_list):
                 )
             else:
                 logging.info("Generating Sentiment Analysis for %s", title)
-                sentiment = analyze_sentiments(
+                sentiment = analyze_sentiment(
                     item.get("text", "")
                 )
-                logging.info("Embeddings generated for %s", title)
+                logging.info("Sentiment generated for %s", title)
                 c.execute(
                     f"INSERT INTO {config.TABLE_NEWS_DATA} (title, top_image, videos, url, date, short_description, text, source, sentiment) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     (
-                        item.get("title", ""),
+                        title,
                         item.get("top_image", ""),
                         item.get("videos", ""),
                         item.get("url", ""),
-                        item.get("date", ""),
+                        date,
                         item.get("short_description", ""),
                         item.get("text", ""),
                         item.get("source", ""),

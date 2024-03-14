@@ -82,5 +82,5 @@ def extract(news_search, start_date, end_date):
 
 if __name__ == "__main__":
     logging.info("Application started.")
-    extract('TSLA', '01/01/2014', '01/01/2024')
+    extract('TSLA', '01/01/2023', '01/01/2024')
     logging.info("Application finished.")

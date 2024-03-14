@@ -77,7 +77,7 @@ class FileHandler:
                 "WARNING: raw data schema does not conform in file %s", filename
             )
 
-        logging.info("INFO: Imported data list: %s", data_list)
+        # logging.info("INFO: Imported data list: %s", data_list)
         return data_list
 
     def delete_files(self, dir_path):

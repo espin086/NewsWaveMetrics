@@ -1,8 +1,8 @@
 # SQLITE databases
 
 *.db
-data/raw/*
-data/processed/*
+temp/data/raw/*
+temp/data/processed/*
 
 
 # Byte-compiled / optimized / DLL files
