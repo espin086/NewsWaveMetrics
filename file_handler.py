@@ -60,7 +60,6 @@ class FileHandler:
         This function imports the news data from the directory specified in the argument.
         """
         filename_starts_with = "news"
-        selected_keys = config.SELECTED_KEYS
 
         data_list = []
         for filename in os.listdir(dirpath):
@@ -140,7 +139,7 @@ class FileHandler:
             "date",
             "short_description",
             "text",
-            "publisher"
+            "source"
         ]
 
         for i, data in enumerate(data_list):
