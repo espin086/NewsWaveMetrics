@@ -2,6 +2,7 @@ import config
 import logging
 import os
 import concurrent.futures
+from datetime import datetime
 from dotenv import load_dotenv
 from file_handler import FileHandler
 from search_news import search_news
@@ -58,7 +59,29 @@ def get_all_news(search_term, pages, start_date, end_date):
     return all_news
 
 
-def extract(news_search, start_date, end_date):
+# def extract(news_search, start_date, end_date):
+#     """
+#     This function extracts data from the News API and saves it locally.
+#     """
+#     file_handler.create_data_folders_if_not_exists()
+#     try:
+#         logging.info(
+#             "Starting extraction process for News Search: %s",
+#             news_search,
+#         )
+#         get_all_news(
+#             search_term=news_search,
+#             start_date = start_date,
+#             end_date = end_date,
+#             pages=config.PAGES,
+#         )
+
+#         logging.info("Extraction process completed for News Search: %s", news_search)
+
+#     except Exception as e:
+#         logging.error("An error occurred in the extract function: %s", str(e))
+
+def extract(news_search, start_date_str, end_date_str):
     """
     This function extracts data from the News API and saves it locally.
     """
@@ -68,12 +91,19 @@ def extract(news_search, start_date, end_date):
             "Starting extraction process for News Search: %s",
             news_search,
         )
-        get_all_news(
-            search_term=news_search,
-            start_date = start_date,
-            end_date = end_date,
-            pages=config.PAGES,
-        )
+        start_date = datetime.strptime(start_date_str, "%d/%m/%Y")
+        end_date = datetime.strptime(end_date_str, "%d/%m/%Y")
+        
+        current_date = start_date
+        while current_date <= end_date:
+            next_year = current_date.replace(year=current_date.year + 1, day=1, month=1)
+            get_all_news(
+                search_term=news_search,
+                start_date=current_date.strftime("%d/%m/%Y"),
+                end_date=min(next_year, end_date).strftime("%d/%m/%Y"),
+                pages=config.PAGES,
+            )
+            current_date = next_year
 
         logging.info("Extraction process completed for News Search: %s", news_search)
 
@@ -82,5 +112,5 @@ def extract(news_search, start_date, end_date):
 
 if __name__ == "__main__":
     logging.info("Application started.")
-    extract('TSLA', '01/01/2023', '01/01/2024')
+    extract('TSLA', '01/01/2022', '01/01/2024')
     logging.info("Application finished.")

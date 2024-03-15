@@ -47,12 +47,13 @@ def fetch_and_store_stock_data(ticker, start_date, end_date):
         return False
     
 def fetch_and_store_news_data(news_topic, start_date, end_date):
+    
     if news_topic:
         extract(news_topic, start_date, end_date)
         run_transform()
-        load_news_data()
+        load_news_data(news_topic)
 
-        file_handler.delete_local()
+        # file_handler.delete_local()
 
         st.success("Search complete!")
         return True
@@ -86,12 +87,12 @@ def query_stock_data(ticker_input):
         st.error(f"An error occurred: {e}")
         return pd.DataFrame()
     
-def query_news_data():
+def query_news_data(news_topic):
     try:
         # Connect to SQLite database
         conn = sqlite3.connect(config.DATABASE)
 
-        # Perform SQL query for the specific ticker
+        # Perform SQL query
         query = f"""
             SELECT 
                 cast(date as TEXT) as Date,
@@ -104,7 +105,7 @@ def query_news_data():
                 source as source,
                 sentiment as sentiment
             FROM ai_safety_news 
-            WHERE sentiment = 'Positive'
+            WHERE sentiment = 'Positive' and search_topic = '{news_topic}'
             ORDER BY date DESC
         """
         data = pd.read_sql(query, conn)
@@ -217,9 +218,11 @@ elif choice == "Analyze News Sentiment":
     if st.button("Analyze News"):
         end_date = date.today()
         start_date = end_date - timedelta(days=365 * 10)
-        if search_input and fetch_and_store_news_data(search_input, start_date, end_date):
+        start_date_formatted = start_date.strftime('%d/%m/%Y')
+        end_date_formatted = end_date.strftime('%d/%m/%Y')
+        if search_input and fetch_and_store_news_data(search_input, start_date_formatted, end_date_formatted):
             st.session_state['news_data_fetched'] = True
-            st.session_state['news_query_result'] = query_news_data()
+            st.session_state['news_query_result'] = query_news_data(search_input)
 
     if st.session_state['news_data_fetched']:
         st.session_state['displayed_news_data'] = filter_dataframe(st.session_state['news_query_result'])

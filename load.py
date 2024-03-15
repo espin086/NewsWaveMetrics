@@ -24,14 +24,14 @@ def load_stock_data(stock_data):
     # Uploading the data to db
     upload_stock_to_db(df = stock_data)
 
-def load_news_data():
+def load_news_data(search_topic):
     """
     This function loads the JSON files from the processed folder and uploads them to the database.
     """
     logging.info("Main loading function initiated.")
     data = file_handler.load_json_files(directory=config.PROCESSED_DATA_PATH)
     create_news_table()
-    upload_news_to_db(json_list=data)
+    upload_news_to_db(json_list=data, search_topic= search_topic)
 
 if __name__ == "__main__":
     load_news_data()

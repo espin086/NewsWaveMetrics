@@ -41,7 +41,8 @@ def create_news_table():
     try:
         c.execute(
             f"""CREATE TABLE IF NOT EXISTS {config.TABLE_NEWS_DATA}
-                    (title TEXT,
+                    (search_topic TEXT,
+                    title TEXT,
                     top_image TEXT,
                     videos TEXT,
                     url TEXT,
@@ -108,7 +109,7 @@ def upload_stock_to_db(df):
 
     conn.close()
 
-def upload_news_to_db(json_list):
+def upload_news_to_db(json_list, search_topic):
     """Check if the primary key exists in the database and upload data if not."""
     logging.info("Starting upload to database.")
     conn = sqlite3.connect(config.DATABASE)
@@ -126,15 +127,24 @@ def upload_news_to_db(json_list):
             result = c.fetchone()
 
             if result:
-                logging.warning(
-                    "%s %s already in the database, skipping...", date, title
-                )
+                if result[0] != search_topic:
+                    logging.info("Updating search topic for %s", title)
+                    c.execute(
+                        f"UPDATE {config.TABLE_NEWS_DATA} SET search_topic=? WHERE date=? AND title=?",
+                        (search_topic, date, title)
+                    )
+                    conn.commit()
+                else:
+                    logging.warning(
+                        "%s %s already in the database with the same search topic, skipping...", date, title
+                    )
             else:
                 logging.info("Generating Sentiment Analysis for %s", title)
                 sentiment = analyze_sentiment(
                     item.get("text", "")
                 )
                 logging.info("Sentiment generated for %s", title)
+                
                 c.execute(
                     f"INSERT INTO {config.TABLE_NEWS_DATA} (title, top_image, videos, url, date, short_description, text, source, sentiment) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     (
