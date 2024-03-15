@@ -16,13 +16,7 @@ TABLE_STOCK_DATA = "stock_data"
 TABLE_NEWS_DATA = "ai_safety_news"
 
 # === Stock Data Required Columns ===
-SELECTED_COLUMNS = [
-    "Open",
-    "High",
-    "Low",
-    "Close",
-    "Volume"
-]
+SELECTED_COLUMNS = ["Open", "High", "Low", "Close", "Volume"]
 
 # === API Configs ===
 News_SEARCH_URL = "https://newsnow.p.rapidapi.com/newsv2"
@@ -30,3 +24,4 @@ News_SEARCH_X_RAPIDAPI_HOST = "newsnow.p.rapidapi.com"
 
 # Pagination for API calls
 PAGES = 15
+YEARS_OF_NEWS = 10

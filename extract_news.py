@@ -16,10 +16,11 @@ file_handler = FileHandler(
 )
 
 # Load the .env file
-load_dotenv("../../.env")
+load_dotenv(".env")
 
 # Get the API key from the environment variable
 RAPID_API_KEY = os.environ.get("RAPID_API_KEY")
+
 
 def get_all_news(search_term, pages, start_date, end_date):
     all_news = []
@@ -30,8 +31,8 @@ def get_all_news(search_term, pages, start_date, end_date):
                 executor.submit(
                     search_news,
                     search_term=search_term,
-                    from_date = start_date,
-                    to_date = end_date,
+                    from_date=start_date,
+                    to_date=end_date,
                     page=page,
                 )
             )
@@ -81,6 +82,7 @@ def get_all_news(search_term, pages, start_date, end_date):
 #     except Exception as e:
 #         logging.error("An error occurred in the extract function: %s", str(e))
 
+
 def extract(news_search, start_date_str, end_date_str):
     """
     This function extracts data from the News API and saves it locally.
@@ -93,7 +95,7 @@ def extract(news_search, start_date_str, end_date_str):
         )
         start_date = datetime.strptime(start_date_str, "%d/%m/%Y")
         end_date = datetime.strptime(end_date_str, "%d/%m/%Y")
-        
+
         current_date = start_date
         while current_date <= end_date:
             next_year = current_date.replace(year=current_date.year + 1, day=1, month=1)
@@ -110,7 +112,8 @@ def extract(news_search, start_date_str, end_date_str):
     except Exception as e:
         logging.error("An error occurred in the extract function: %s", str(e))
 
+
 if __name__ == "__main__":
     logging.info("Application started.")
-    extract('TSLA', '01/01/2022', '01/01/2024')
+    extract("TSLA", "01/01/2022", "01/01/2024")
     logging.info("Application finished.")
