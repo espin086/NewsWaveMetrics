@@ -51,6 +51,7 @@ def create_news_table():
                     text TEXT,
                     source TEXT,
                     sentiment TEXT,
+                    sentiment_score REAL,
                     PRIMARY KEY (title, date)
                     )"""
         )
@@ -140,13 +141,13 @@ def upload_news_to_db(json_list, search_topic):
                     )
             else:
                 logging.info("Generating Sentiment Analysis for %s", title)
-                sentiment = analyze_sentiment(
+                sentiment, sentiment_score  = analyze_sentiment(
                     item.get("text", "")
                 )
                 logging.info("Sentiment generated for %s", title)
                 
                 c.execute(
-                    f"INSERT INTO {config.TABLE_NEWS_DATA} (title, top_image, videos, url, date, short_description, text, source, sentiment) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    f"INSERT INTO {config.TABLE_NEWS_DATA} (title, top_image, videos, url, date, short_description, text, source, sentiment, sentiment_score) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     (
                         title,
                         item.get("top_image", ""),
@@ -157,6 +158,7 @@ def upload_news_to_db(json_list, search_topic):
                         item.get("text", ""),
                         item.get("source", ""),
                         str(sentiment),
+                        sentiment_score,
                     ),
                 )
                 conn.commit()

@@ -113,14 +113,15 @@ def query_news_data(news_topic):
         query = f"""
             SELECT 
                 cast(date as TEXT) as Date,
-                title as title,
-                top_image as top_image,
-                videos as videos,
-                url as url,
-                short_description as short_description,
-                text as text,
-                source as source,
-                sentiment as sentiment
+                title as Title,
+                top_image as Top_Image,
+                videos as Videos,
+                url as URL,
+                short_description as Short_Description,
+                text as Text,
+                source as Source,
+                sentiment as Sentiment,
+                sentiment_score as Sentiment_Score
             FROM ai_safety_news 
             WHERE search_topic = '{news_topic}'
             ORDER BY date DESC
