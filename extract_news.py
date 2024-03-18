@@ -115,5 +115,5 @@ def extract(news_search, start_date_str, end_date_str):
 
 if __name__ == "__main__":
     logging.info("Application started.")
-    extract("TSLA", "01/01/2022", "01/01/2024")
+    extract("Federal Reserve", "01/01/2024", "01/03/2024")
     logging.info("Application finished.")

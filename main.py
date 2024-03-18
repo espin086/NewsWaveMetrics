@@ -8,6 +8,7 @@ from get_stock_data import get_daily_stock_data
 from data_transform import DataTransformer
 from file_handler import FileHandler
 from extract_news import extract
+from datetime import datetime 
 
 from config import (
     PROCESSED_DATA_PATH,
@@ -67,7 +68,7 @@ def fetch_and_store_news_data(news_topic, start_date, end_date):
         run_transform()
         load_news_data(news_topic)
 
-        # file_handler.delete_local()
+        file_handler.delete_local()
 
         st.success("Search complete!")
         return True
@@ -244,8 +245,16 @@ elif choice == "Analyze News Sentiment":
     search_input = st.text_input("Enter the News Topic:", key="search_input")
 
     if st.button("Analyze News"):
-        end_date = date.today()
-        start_date = end_date - timedelta(days=365 * 10)
+        # end_date = date.today()
+        # start_date = end_date - timedelta(days=365 * 10)
+        end_date_str = "01/03/2024"
+        start_date_str = "01/01/2024"
+
+        # Convert strings to datetime objects
+        end_date = datetime.strptime(end_date_str, "%d/%m/%Y")
+        start_date = datetime.strptime(start_date_str, "%d/%m/%Y")
+
+        # Format datetime objects
         start_date_formatted = start_date.strftime("%d/%m/%Y")
         end_date_formatted = end_date.strftime("%d/%m/%Y")
         if search_input and fetch_and_store_news_data(
