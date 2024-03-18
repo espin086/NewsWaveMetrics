@@ -21,7 +21,7 @@ from pandas.api.types import (
     is_numeric_dtype,
     is_object_dtype,
 )
-from moving_average import moving_average_strategy, plot_stock_data
+from ploting_graphs import moving_average_strategy, plot_stock_data, plot_sentiment_counts_per_year
 
 
 for key in [
@@ -63,18 +63,19 @@ def fetch_and_store_stock_data(ticker, start_date, end_date):
 
 def fetch_and_store_news_data(news_topic, start_date, end_date):
 
-    if news_topic:
-        extract(news_topic, start_date, end_date)
-        run_transform()
-        load_news_data(news_topic)
+    # if news_topic:
+    #     extract(news_topic, start_date, end_date)
+    #     run_transform()
+    #     load_news_data(news_topic)
 
-        file_handler.delete_local()
+    #     file_handler.delete_local()
 
-        st.success("Search complete!")
-        return True
-    else:
-        st.warning("Please enter News Topic")
-        return False
+    #     st.success("Search complete!")
+    #     return True
+    # else:
+    #     st.warning("Please enter News Topic")
+    #     return False
+    return True
 
 
 def query_stock_data(ticker_input):
@@ -249,7 +250,7 @@ elif choice == "Analyze News Sentiment":
         # end_date = date.today()
         # start_date = end_date - timedelta(days=365 * 10)
         end_date_str = "01/03/2024"
-        start_date_str = "01/01/2024"
+        start_date_str = "01/03/2023"
 
         # Convert strings to datetime objects
         end_date = datetime.strptime(end_date_str, "%d/%m/%Y")
@@ -270,3 +271,8 @@ elif choice == "Analyze News Sentiment":
         )
         st.write("Filtered Table:")
         st.dataframe(st.session_state["displayed_news_data"])
+
+        if not st.session_state["news_query_result"].empty:
+            df_for_graph = st.session_state["news_query_result"].copy()
+            plot_sentiment_counts_per_year(df_for_graph)
+    

@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
+import plotly.express as px
 
 def moving_average_strategy(data, short_window, long_window):
     signals = pd.DataFrame(index=data.index)
@@ -85,4 +86,28 @@ def plot_stock_data(data, signals, graph_width=900, graph_height=600):
         height=graph_height
     )
 
+    st.plotly_chart(fig)
+
+
+
+
+def plot_sentiment_counts_per_year(df):
+
+    df['Date'] = pd.to_datetime(df['Date'])
+    
+    df['Year'] = df['Date'].dt.year
+    
+    sentiment_counts = df.groupby(['Year', 'Sentiment']).size().reset_index(name='Count')
+    
+    sentiment_counts = sentiment_counts.groupby('Year').apply(lambda x: x.assign(Percentage=x['Count'] / x['Count'].sum() * 100)).reset_index(drop=True)
+    
+    color_mapping = {'positive': 'green', 'negative': 'red', 'neutral': 'grey'}
+    
+    fig = px.bar(sentiment_counts, x='Year', y='Percentage', color='Sentiment',
+                 title='Sentiment Percentage per Year',
+                 labels={'Percentage': 'Sentiment Percentage (%)', 'Year': 'Year'},
+                 color_discrete_map=color_mapping)
+    
+    fig.update_xaxes(tickmode='linear', tick0=2010, dtick=1)
+    
     st.plotly_chart(fig)
