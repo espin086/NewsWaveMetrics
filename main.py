@@ -21,7 +21,7 @@ from pandas.api.types import (
     is_numeric_dtype,
     is_object_dtype,
 )
-from ploting_graphs import moving_average_strategy, plot_stock_data, plot_sentiment_counts_per_year
+from ploting_graphs import moving_average_strategy, plot_stock_data, plot_sentiment_counts_per_year, plot_average_sentiment_by_date
 
 
 for key in [
@@ -275,4 +275,5 @@ elif choice == "Analyze News Sentiment":
         if not st.session_state["news_query_result"].empty:
             df_for_graph = st.session_state["news_query_result"].copy()
             plot_sentiment_counts_per_year(df_for_graph)
+            plot_average_sentiment_by_date(df_for_graph)
     

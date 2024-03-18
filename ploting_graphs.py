@@ -88,9 +88,6 @@ def plot_stock_data(data, signals, graph_width=900, graph_height=600):
 
     st.plotly_chart(fig)
 
-
-
-
 def plot_sentiment_counts_per_year(df):
 
     df['Date'] = pd.to_datetime(df['Date'])
@@ -109,5 +106,19 @@ def plot_sentiment_counts_per_year(df):
                  color_discrete_map=color_mapping)
     
     fig.update_xaxes(tickmode='linear', tick0=2010, dtick=1)
+    
+    st.plotly_chart(fig)
+
+def plot_average_sentiment_by_date(df):
+
+    df['Date'] = pd.to_datetime(df['Date'])
+    
+    average_sentiment = df.groupby(['Date', 'Sentiment_Score']).size().unstack(fill_value=0).mean(axis=1)
+    
+    average_sentiment = average_sentiment.reset_index(name='Average Sentiment Score')
+    
+    fig = px.line(average_sentiment, x='Date', y='Average Sentiment Score',
+                  title='Average Sentiment Score by Date',
+                  labels={'Average Sentiment': 'Average Sentiment', 'Date': 'Date'})
     
     st.plotly_chart(fig)
