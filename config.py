@@ -23,5 +23,5 @@ News_SEARCH_URL = "https://newsnow.p.rapidapi.com/newsv2"
 News_SEARCH_X_RAPIDAPI_HOST = "newsnow.p.rapidapi.com"
 
 # Pagination for API calls
-PAGES = 5
+PAGES = 10
 YEARS_OF_NEWS = 10

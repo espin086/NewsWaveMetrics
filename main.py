@@ -63,19 +63,18 @@ def fetch_and_store_stock_data(ticker, start_date, end_date):
 
 def fetch_and_store_news_data(news_topic, start_date, end_date):
 
-    # if news_topic:
-    #     extract(news_topic, start_date, end_date)
-    #     run_transform()
-    #     load_news_data(news_topic)
+    if news_topic:
+        extract(news_topic, start_date, end_date)
+        run_transform()
+        load_news_data(news_topic)
 
-    #     file_handler.delete_local()
+        file_handler.delete_local()
 
-    #     st.success("Search complete!")
-    #     return True
-    # else:
-    #     st.warning("Please enter News Topic")
-    #     return False
-    return True
+        st.success("Search complete!")
+        return True
+    else:
+        st.warning("Please enter News Topic")
+        return False
 
 
 def query_stock_data(ticker_input):
@@ -247,14 +246,14 @@ elif choice == "Analyze News Sentiment":
     search_input = st.text_input("Enter the News Topic:", key="search_input")
 
     if st.button("Analyze News"):
-        # end_date = date.today()
-        # start_date = end_date - timedelta(days=365 * 10)
-        end_date_str = "01/03/2024"
-        start_date_str = "01/03/2023"
+        end_date = date.today()
+        start_date = end_date - timedelta(days=365 * 10)
+        # end_date_str = "01/03/2024"
+        # start_date_str = "01/03/2023"
 
-        # Convert strings to datetime objects
-        end_date = datetime.strptime(end_date_str, "%d/%m/%Y")
-        start_date = datetime.strptime(start_date_str, "%d/%m/%Y")
+        # # Convert strings to datetime objects
+        # end_date = datetime.strptime(end_date_str, "%d/%m/%Y")
+        # start_date = datetime.strptime(start_date_str, "%d/%m/%Y")
 
         # Format datetime objects
         start_date_formatted = start_date.strftime("%d/%m/%Y")
