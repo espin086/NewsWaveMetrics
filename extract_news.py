@@ -82,7 +82,6 @@ def get_all_news(search_term, pages, start_date, end_date):
 #     except Exception as e:
 #         logging.error("An error occurred in the extract function: %s", str(e))
 
-
 def extract(news_search, start_date_str, end_date_str):
     """
     This function extracts data from the News API and saves it locally.
@@ -97,20 +96,34 @@ def extract(news_search, start_date_str, end_date_str):
         end_date = datetime.strptime(end_date_str, "%d/%m/%Y")
 
         current_date = start_date
-        while current_date <= end_date:
-            next_year = current_date.replace(year=current_date.year + 1, day=1, month=1)
-            get_all_news(
-                search_term=news_search,
-                start_date=current_date.strftime("%d/%m/%Y"),
-                end_date=min(next_year, end_date).strftime("%d/%m/%Y"),
-                pages=config.PAGES,
-            )
-            current_date = next_year
+        num_threads = 10
+        futures = []
+        with concurrent.futures.ThreadPoolExecutor(max_workers=num_threads) as executor:
+            while current_date <= end_date:
+                next_year = current_date.replace(
+                    year=current_date.year + 1, day=1, month=1
+                )
+                min_end_date = min(next_year, end_date)
+                future = executor.submit(
+                    get_all_news,
+                    search_term=news_search,
+                    start_date=current_date.strftime("%d/%m/%Y"),
+                    end_date=min_end_date.strftime("%d/%m/%Y"),
+                    pages=config.PAGES,
+                )
+                futures.append(future)  # Move this line inside the loop
+                current_date = next_year
+
+        for future in concurrent.futures.as_completed(futures):
+            try:
+                result = future.result()
+                # Process the result if necessary
+            except Exception as e:
+                logging.error(f"An error occurred: {e}")
 
         logging.info("Extraction process completed for News Search: %s", news_search)
-
-    except Exception as e:
-        logging.error("An error occurred in the extract function: %s", str(e))
+    except Exception as ex:
+        logging.error(f"An error occurred during extraction: {ex}")
 
 
 if __name__ == "__main__":
