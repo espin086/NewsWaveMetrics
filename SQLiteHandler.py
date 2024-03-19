@@ -1,6 +1,7 @@
 import logging
 import sqlite3
 import config
+from sentiment_analysis import analyze_sentiment
 
 def create_stock_table():
     """Create the database if it doesn't exist."""
@@ -25,6 +26,39 @@ def create_stock_table():
         logging.info(
             "Successfully created or ensured the table %s exists.",
             config.TABLE_STOCK_DATA,
+        )
+    except Exception as e:
+        logging.error("Failed to create table: %s", e)
+    finally:
+        conn.close()
+
+def create_news_table():
+    """Create the database if it doesn't exist."""
+    logging.info("Checking and creating database if not present.")
+    conn = sqlite3.connect(config.DATABASE)
+    c = conn.cursor()
+
+    try:
+        c.execute(
+            f"""CREATE TABLE IF NOT EXISTS {config.TABLE_NEWS_DATA}
+                    (search_topic TEXT,
+                    title TEXT,
+                    top_image TEXT,
+                    videos TEXT,
+                    url TEXT,
+                    date TEXT,
+                    short_description TEXT,
+                    text TEXT,
+                    source TEXT,
+                    sentiment TEXT,
+                    sentiment_score REAL,
+                    PRIMARY KEY (title, date)
+                    )"""
+        )
+        conn.commit()
+        logging.info(
+            "Successfully created or ensured the table %s exists.",
+            config.TABLE_NEWS_DATA,
         )
     except Exception as e:
         logging.error("Failed to create table: %s", e)
@@ -73,5 +107,69 @@ def upload_stock_to_db(df):
                 )
         except Exception as e:
             logging.error("Skipping row due to error: %s", e)
+
+    conn.close()
+
+def upload_news_to_db(json_list, search_topic):
+    """Check if the primary key exists in the database and upload data if not."""
+    logging.info("Starting upload to database.")
+    conn = sqlite3.connect(config.DATABASE)
+    c = conn.cursor()
+
+    for item in json_list:
+        try:
+            date = item["date"]
+            title = item["title"]
+            
+            c.execute(
+                f"SELECT * FROM {config.TABLE_NEWS_DATA} WHERE date=? AND title=?",
+                (date, title),
+            )
+            results = c.fetchall()
+
+            if results:
+                for result in results:
+                    if result[0] != search_topic:
+                        logging.info("Updating search topic for %s", title)
+                        c.execute(
+                            f"UPDATE {config.TABLE_NEWS_DATA} SET search_topic=? WHERE date=? AND title=?",
+                            (search_topic, date, title)
+                        )
+                        conn.commit()
+                    else:
+                        logging.warning(
+                            "%s %s already in the database with the same search topic, skipping...", date, title
+                        )
+            else:
+                logging.info("Generating Sentiment Analysis for %s", title)
+                sentiment, sentiment_score  = analyze_sentiment(
+                    item.get("text", "")
+                )
+                logging.info("Sentiment generated for %s", title)
+                
+                c.execute(
+                    f"INSERT INTO {config.TABLE_NEWS_DATA} (search_topic, title, top_image, videos, url, date, short_description, text, source, sentiment, sentiment_score) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    (
+                        search_topic,
+                        title,
+                        item.get("top_image", ""),
+                        item.get("videos", ""),
+                        item.get("url", ""),
+                        date,
+                        item.get("short_description", ""),
+                        item.get("text", ""),
+                        item.get("source", ""),
+                        str(sentiment),
+                        sentiment_score,
+                    ),
+                )
+                conn.commit()
+                logging.info(
+                    "UPLOADED: %s uploaded to the database", title
+                )
+        except KeyError as e:
+            logging.error("Skipping item due to missing key: %s", e)
+        except Exception as e:
+            logging.error("Skipping item due to error: %s", e)
 
     conn.close()
