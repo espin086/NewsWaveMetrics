@@ -247,7 +247,7 @@ elif choice == "Analyze News Sentiment":
 
     if st.button("Analyze News"):
         end_date = date.today()
-        start_date = end_date - timedelta(days=365 * 10)
+        start_date = end_date - timedelta(days=365 * config.YEARS_OF_NEWS)
         # end_date_str = "01/03/2024"
         # start_date_str = "01/03/2023"
 

@@ -125,20 +125,21 @@ def upload_news_to_db(json_list, search_topic):
                 f"SELECT * FROM {config.TABLE_NEWS_DATA} WHERE date=? AND title=?",
                 (date, title),
             )
-            result = c.fetchone()
+            results = c.fetchall()
 
-            if result:
-                if result[0] != search_topic:
-                    logging.info("Updating search topic for %s", title)
-                    c.execute(
-                        f"UPDATE {config.TABLE_NEWS_DATA} SET search_topic=? WHERE date=? AND title=?",
-                        (search_topic, date, title)
-                    )
-                    conn.commit()
-                else:
-                    logging.warning(
-                        "%s %s already in the database with the same search topic, skipping...", date, title
-                    )
+            if results:
+                for result in results:
+                    if result[0] != search_topic:
+                        logging.info("Updating search topic for %s", title)
+                        c.execute(
+                            f"UPDATE {config.TABLE_NEWS_DATA} SET search_topic=? WHERE date=? AND title=?",
+                            (search_topic, date, title)
+                        )
+                        conn.commit()
+                    else:
+                        logging.warning(
+                            "%s %s already in the database with the same search topic, skipping...", date, title
+                        )
             else:
                 logging.info("Generating Sentiment Analysis for %s", title)
                 sentiment, sentiment_score  = analyze_sentiment(
@@ -147,8 +148,9 @@ def upload_news_to_db(json_list, search_topic):
                 logging.info("Sentiment generated for %s", title)
                 
                 c.execute(
-                    f"INSERT INTO {config.TABLE_NEWS_DATA} (title, top_image, videos, url, date, short_description, text, source, sentiment, sentiment_score) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    f"INSERT INTO {config.TABLE_NEWS_DATA} (search_topic, title, top_image, videos, url, date, short_description, text, source, sentiment, sentiment_score) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     (
+                        search_topic,
                         title,
                         item.get("top_image", ""),
                         item.get("videos", ""),

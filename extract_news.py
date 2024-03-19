@@ -2,7 +2,7 @@ import config
 import logging
 import os
 import concurrent.futures
-from datetime import datetime
+from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from file_handler import FileHandler
 from search_news import search_news
@@ -23,6 +23,7 @@ RAPID_API_KEY = os.environ.get("RAPID_API_KEY")
 
 
 def get_all_news(search_term, pages, start_date, end_date):
+    print(start_date, end_date, pages)
     all_news = []
     with concurrent.futures.ThreadPoolExecutor() as executor:
         futures = []
@@ -99,10 +100,8 @@ def extract(news_search, start_date_str, end_date_str):
         num_threads = 10
         futures = []
         with concurrent.futures.ThreadPoolExecutor(max_workers=num_threads) as executor:
-            while current_date <= end_date:
-                next_year = current_date.replace(
-                    year=current_date.year + 1, day=1, month=1
-                )
+            while current_date < end_date:
+                next_year = current_date.replace(year=current_date.year + 1) + timedelta(days=1)
                 min_end_date = min(next_year, end_date)
                 future = executor.submit(
                     get_all_news,
@@ -111,13 +110,12 @@ def extract(news_search, start_date_str, end_date_str):
                     end_date=min_end_date.strftime("%d/%m/%Y"),
                     pages=config.PAGES,
                 )
-                futures.append(future)  # Move this line inside the loop
+                futures.append(future)
                 current_date = next_year
 
         for future in concurrent.futures.as_completed(futures):
             try:
                 result = future.result()
-                # Process the result if necessary
             except Exception as e:
                 logging.error(f"An error occurred: {e}")
 
@@ -126,7 +124,7 @@ def extract(news_search, start_date_str, end_date_str):
         logging.error(f"An error occurred during extraction: {ex}")
 
 
-if __name__ == "__main__":
-    logging.info("Application started.")
-    extract("Federal Reserve", "01/01/2024", "01/03/2024")
-    logging.info("Application finished.")
+# if __name__ == "__main__":
+#     logging.info("Application started.")
+#     extract("Federal Reserve", "01/01/2024", "01/03/2024")
+#     logging.info("Application finished.")
