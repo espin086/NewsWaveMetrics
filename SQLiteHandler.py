@@ -206,49 +206,71 @@ def upload_news_to_db(json_list, search_topic):
 
     conn.close()
 
+# def upload_fred_to_db(df):
+#     """Check if the primary key exists in the database and upload data if not."""
+#     logging.info("Starting upload to database.")
+#     conn = sqlite3.connect(config.DATABASE)
+#     c = conn.cursor()
+
+#     for _, row in df.iterrows():
+#         try:
+#             date_value = row.get("Date", "")
+
+#             # Check if the primary key (date, ticker) exists in the database
+#             c.execute(
+#                 f"SELECT * FROM {config.TABLE_FRED_DATA} WHERE date=?",
+#                 (date_value),
+#             )
+#             result = c.fetchone()
+
+#             if result:
+#                 logging.warning(
+#                     "%s %s already in the database, skipping...", date_value
+#                 )
+#             else:
+#                 # Insert new row into the database
+#                 c.execute(
+#                     f"INSERT OR REPLACE INTO {config.TABLE_FRED_DATA} (date, exchange_rates, treasury_yields, fed_funds_rate, consumer_price_index, GDP, industrial_production, unemployment_rate, consumer_sentiment, producer_price_index) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+#                     (
+#                         date_value,
+#                         row.get("exchange_rates", ""),
+#                         row.get("treasury_yields", ""),
+#                         row.get("fed_funds_rate", ""),
+#                         row.get("consumer_price_index", ""),
+#                         row.get("GDP", ""),
+#                         row.get("industrial_production", ""),
+#                         row.get("unemployment_rate", ""),
+#                         row.get("consumer_sentiment", ""),
+#                         row.get("producer_price_index", ""),
+#                     ),
+#                 )
+#                 conn.commit()
+#                 logging.info(
+#                     "UPLOADED: %s %s uploaded to the database", date_value
+#                 )
+#         except Exception as e:
+#             logging.error("Skipping row due to error: %s", e)
+
+#     conn.close()
+    
 def upload_fred_to_db(df):
-    """Check if the primary key exists in the database and upload data if not."""
+    """Truncate the table and insert the entire DataFrame into the database."""
     logging.info("Starting upload to database.")
     conn = sqlite3.connect(config.DATABASE)
     c = conn.cursor()
 
-    for _, row in df.iterrows():
-        try:
-            date_value = row.get("Date", "")
+    try:
+        # Truncate the table
+        c.execute(f"DELETE FROM {config.TABLE_FRED_DATA}")
+        conn.commit()
+        logging.info("Table truncated.")
 
-            # Check if the primary key (date, ticker) exists in the database
-            c.execute(
-                f"SELECT * FROM {config.TABLE_FRED_DATA} WHERE date=?",
-                (date_value),
-            )
-            result = c.fetchone()
+        # Insert the entire DataFrame into the database
+        df.to_sql(name=config.TABLE_FRED_DATA, con=conn, if_exists="append", index=False)
+        conn.commit()
+        logging.info("Data uploaded to the database.")
 
-            if result:
-                logging.warning(
-                    "%s %s already in the database, skipping...", date_value
-                )
-            else:
-                # Insert new row into the database
-                c.execute(
-                    f"INSERT OR REPLACE INTO {config.TABLE_FRED_DATA} (date, exchange_rates, treasury_yields, fed_funds_rate, consumer_price_index, GDP, industrial_production, unemployment_rate, consumer_sentiment, producer_price_index) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                    (
-                        date_value,
-                        row.get("exchange_rates", ""),
-                        row.get("treasury_yields", ""),
-                        row.get("fed_funds_rate", ""),
-                        row.get("consumer_price_index", ""),
-                        row.get("GDP", ""),
-                        row.get("industrial_production", ""),
-                        row.get("unemployment_rate", ""),
-                        row.get("consumer_sentiment", ""),
-                        row.get("producer_price_index", ""),
-                    ),
-                )
-                conn.commit()
-                logging.info(
-                    "UPLOADED: %s %s uploaded to the database", date_value
-                )
-        except Exception as e:
-            logging.error("Skipping row due to error: %s", e)
+    except Exception as e:
+        logging.error("Error occurred while uploading data to the database: %s", e)
 
     conn.close()
