@@ -25,3 +25,6 @@ News_SEARCH_X_RAPIDAPI_HOST = "newsnow.p.rapidapi.com"
 # Pagination for API calls
 PAGES = 10
 YEARS_OF_NEWS = 10
+
+#ECONOMIC_METRICS_IDS = [ Exchange Rates, Treasury Yields, Fed Funds Rate, CPI (Consumer Price Index), GDP (Gross Domestic Product), Industrial Production, Unemployment Rate, Consumer Sentiment, PPI (Producer Price Index)]
+ECONOMIC_METRICS_IDS = [ "DTWEXBGS", "T10Y2Y", "DFF", "CPIAUCSL", "GDP", "INDPRO", "UNRATE", "UMCSENT", "PPIACO"]
