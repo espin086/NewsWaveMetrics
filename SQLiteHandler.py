@@ -83,8 +83,7 @@ def create_fred_table():
                     industrial_production REAL,
                     unemployment_rate REAL,
                     consumer_sentiment REAL,
-                    producer_price_index REAL,
-                    PRIMARY KEY (date)
+                    producer_price_index REAL
                     )"""
         )
         conn.commit()
@@ -236,7 +235,7 @@ def upload_fred_to_db(df):
             )
             conn.commit()
             logging.info(
-                "UPLOADED: %s %s uploaded to the database", row.get("date", "")
+                "UPLOADED: %s uploaded to the database", row.get("date", "")
             )
         except Exception as e:
             logging.error("Skipping row due to error: %s", e)

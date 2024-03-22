@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 from dotenv import load_dotenv
 import config
+from datetime import datetime
 
 load_dotenv(".env")
 
@@ -15,6 +16,8 @@ f = Fred(api_key = FRED_API_KEY)
 def get_frequency(economic_metrics_id):
     if economic_metrics_id == "DTWEXBGS" or economic_metrics_id == "T10Y2Y" or economic_metrics_id == "DFF":
         return "d"
+    elif economic_metrics_id == "GDP":
+      return "q"
     else:
         return "m"
 
@@ -43,5 +46,7 @@ def extract_all_economic_data():
         df.rename(columns={df.columns[1]: economic_metrics_id}, inplace=True)
 
         df_all = pd.merge(df_all, df, on='date', how='outer')
+
+    df_all['date'] = df_all['date'].apply(lambda x: datetime.strptime(x.strftime('%Y-%m-%d'), "%Y-%m-%d").date())
 
     return df_all
