@@ -1,7 +1,8 @@
-import os
 from twilio.rest import Client
 from dotenv import load_dotenv
 import os
+
+import config
 
 
 # Load environment variables from .env file
@@ -14,9 +15,17 @@ auth_token = os.getenv("TWILIO_AUTH_TOKEN")
 # Create Twilio client
 client = Client(account_sid, auth_token)
 
-message = client.messages.create(
-    body="This is the ship that made the Kessel Run in fourteen parsecs?",
-    from_="+13238798975",
-    to="+13233330336",
-)
-print(message)
+
+def send_sms(to_number, message):
+    """
+    Send SMS to a phone number using Twilio API
+    """
+    message = client.messages.create(
+        body=message, from_=config.TWILIO_PHONE_NUMBER, to=to_number
+    )
+    print(f"Message sent to {to_number} with SID: {message.sid}")
+
+
+if __name__ == "__main__":
+    # Send SMS to a phone number
+    send_sms("+13233330336", "Hello from Twilio!")

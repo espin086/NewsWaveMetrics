@@ -22,12 +22,24 @@ SELECTED_COLUMNS = ["Open", "High", "Low", "Close", "Volume"]
 # === API Configs ===
 News_SEARCH_URL = "https://newsnow.p.rapidapi.com/newsv2"
 News_SEARCH_X_RAPIDAPI_HOST = "newsnow.p.rapidapi.com"
+TWILIO_PHONE_NUMBER = "+13238798975"
+
 
 # Pagination for API calls
 PAGES = 10
 YEARS_OF_NEWS = 10
 
-#ECONOMIC_METRICS_IDS = [ Exchange Rates, Treasury Yields, Fed Funds Rate, CPI (Consumer Price Index), GDP (Gross Domestic Product), Industrial Production, Unemployment Rate, Consumer Sentiment, PPI (Producer Price Index)]
-ECONOMIC_METRICS_IDS = [ "DTWEXBGS", "T10Y2Y", "DFF", "CPIAUCSL", "GDP", "INDPRO", "UNRATE", "UMCSENT", "PPIACO"]
+# ECONOMIC_METRICS_IDS = [ Exchange Rates, Treasury Yields, Fed Funds Rate, CPI (Consumer Price Index), GDP (Gross Domestic Product), Industrial Production, Unemployment Rate, Consumer Sentiment, PPI (Producer Price Index)]
+ECONOMIC_METRICS_IDS = [
+    "DTWEXBGS",
+    "T10Y2Y",
+    "DFF",
+    "CPIAUCSL",
+    "GDP",
+    "INDPRO",
+    "UNRATE",
+    "UMCSENT",
+    "PPIACO",
+]
 
-OBSERVATION_START = '2014-01-01'
+OBSERVATION_START = "2014-01-01"
