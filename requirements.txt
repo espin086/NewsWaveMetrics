@@ -5,3 +5,4 @@ yfinance==0.2.37
 plotly==5.19.0
 python-dotenv==1.0.0
 nltk
+twilio
