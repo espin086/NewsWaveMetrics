@@ -122,3 +122,18 @@ def plot_average_sentiment_by_date(df):
                   labels={'Average Sentiment': 'Average Sentiment', 'Date': 'Date'})
     
     st.plotly_chart(fig)
+
+def plot_economic_data(df, selected_column):
+
+    st.write("## Economic Data Plot")
+    
+    df['date'] = pd.to_datetime(df['date'])
+
+    df_selected = df[['date', selected_column]]
+
+    df_cleaned = df_selected.dropna()
+
+    fig = px.line(df_cleaned, x='date', y=selected_column, title=f"{selected_column} Over Time")
+    
+    st.plotly_chart(fig)
+
