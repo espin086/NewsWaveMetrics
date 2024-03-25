@@ -22,7 +22,7 @@ from pandas.api.types import (
     is_numeric_dtype,
     is_object_dtype,
 )
-from ploting_graphs import moving_average_strategy, plot_stock_data, plot_sentiment_counts_per_year, plot_average_sentiment_by_date
+from ploting_graphs import moving_average_strategy, plot_stock_data, plot_sentiment_counts_per_year, plot_average_sentiment_by_date, plot_economic_data
 
 
 for key in [
@@ -33,11 +33,12 @@ for key in [
     "query_result",
     "displayed_data",
     "displayed_news_data",
+    "selected_column"
 ]:
     if key not in st.session_state:
         st.session_state[key] = (
             False
-            if key == "data_fetched" or key == "news_data_fetched" or key == "fred_query_result"
+            if key in ["data_fetched", "news_data_fetched", "fred_data_fetched"]
             else pd.DataFrame()
         )
 
@@ -81,7 +82,6 @@ def fetch_and_store_news_data(news_topic, start_date, end_date):
 def fetch_and_store_fred_data():
     df = extract_all_economic_data()
     if not df.empty:
-        st.write(df)
         load_fred_data(df)
         st.success("Data fetched and stored successfully.")
         return True
@@ -278,12 +278,6 @@ elif choice == "Analyze News Sentiment":
     if st.button("Analyze News"):
         end_date = date.today()
         start_date = end_date - timedelta(days=365 * config.YEARS_OF_NEWS)
-        # end_date_str = "01/03/2024"
-        # start_date_str = "01/03/2023"
-
-        # # Convert strings to datetime objects
-        # end_date = datetime.strptime(end_date_str, "%d/%m/%Y")
-        # start_date = datetime.strptime(start_date_str, "%d/%m/%Y")
 
         # Format datetime objects
         start_date_formatted = start_date.strftime("%d/%m/%Y")
@@ -305,13 +299,22 @@ elif choice == "Analyze News Sentiment":
             df_for_graph = st.session_state["news_query_result"].copy()
             plot_sentiment_counts_per_year(df_for_graph)
             plot_average_sentiment_by_date(df_for_graph)
-
+            
 elif choice == "Analyze Economic Metrics":
     if st.button("Analyze Metrics"):
         if fetch_and_store_fred_data():
             st.session_state["fred_data_fetched"] = True
             st.session_state["fred_query_result"] = query_fred_data()
+        else:
+            st.session_state["fred_data_fetched"] = False
 
-        
+    if st.session_state.get("fred_data_fetched", False):
+        st.write("Economic Metrics Data Table:")
+        st.dataframe(st.session_state["fred_query_result"])
 
-
+        if not st.session_state["fred_query_result"].empty:
+            df_for_graph = st.session_state["fred_query_result"].copy()
+            columns_to_exclude = ['date']
+            selectable_columns = [col for col in df_for_graph.columns if col not in columns_to_exclude]
+            selected_column = st.selectbox("Select Metric to Display", selectable_columns, key='selected_econ_metric')
+            plot_economic_data(df_for_graph, selected_column)
