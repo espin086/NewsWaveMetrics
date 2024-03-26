@@ -65,6 +65,37 @@ def create_news_table():
     finally:
         conn.close()
 
+def create_fred_table():
+    """Create the database if it doesn't exist."""
+    logging.info("Checking and creating database if not present.")
+    conn = sqlite3.connect(config.DATABASE)
+    c = conn.cursor()
+
+    try:
+        c.execute(
+            f"""CREATE TABLE IF NOT EXISTS {config.TABLE_FRED_DATA}
+                    (date TEXT,
+                    exchange_rates REAL,
+                    treasury_yields REAL,
+                    fed_funds_rate REAL,
+                    consumer_price_index REAL,
+                    GDP  REAL,
+                    industrial_production REAL,
+                    unemployment_rate REAL,
+                    consumer_sentiment REAL,
+                    producer_price_index REAL
+                    )"""
+        )
+        conn.commit()
+        logging.info(
+            "Successfully created or ensured the table %s exists.",
+            config.TABLE_FRED_DATA,
+        )
+    except Exception as e:
+        logging.error("Failed to create table: %s", e)
+    finally:
+        conn.close()
+
 def upload_stock_to_db(df):
     """Check if the primary key exists in the database and upload data if not."""
     logging.info("Starting upload to database.")
@@ -171,5 +202,42 @@ def upload_news_to_db(json_list, search_topic):
             logging.error("Skipping item due to missing key: %s", e)
         except Exception as e:
             logging.error("Skipping item due to error: %s", e)
+
+    conn.close()
+
+def upload_fred_to_db(df):
+    """Check if the primary key exists in the database and upload data if not."""
+    logging.info("Starting upload to database.")
+    conn = sqlite3.connect(config.DATABASE)
+    c = conn.cursor()
+
+    c.execute(f"DELETE FROM {config.TABLE_FRED_DATA}")
+    conn.commit()
+    logging.info("Table truncated.")
+
+    for _, row in df.iterrows():
+        try:
+            # Insert new row into the database
+            c.execute(
+                f"INSERT OR REPLACE INTO {config.TABLE_FRED_DATA} (date, exchange_rates, treasury_yields, fed_funds_rate, consumer_price_index, GDP, industrial_production, unemployment_rate, consumer_sentiment, producer_price_index) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (
+                    row.get("date", ""),
+                    row.get("DTWEXBGS", ""),
+                    row.get("T10Y2Y", ""),
+                    row.get("DFF", ""),
+                    row.get("CPIAUCSL", ""),
+                    row.get("GDP", ""),
+                    row.get("INDPRO", ""),
+                    row.get("UNRATE", ""),
+                    row.get("UMCSENT", ""),
+                    row.get("PPIACO", ""),
+                ),
+            )
+            conn.commit()
+            logging.info(
+                "UPLOADED: %s uploaded to the database", row.get("date", "")
+            )
+        except Exception as e:
+            logging.error("Skipping row due to error: %s", e)
 
     conn.close()

@@ -18,3 +18,10 @@ An automated procedure is implemented to retrieve daily news data on a designate
 ![Searching News Data](images/image_ui_news_data.png)
 
 ![Visualizing News Data](images/image_ui_visualize_news_data.png)
+
+ ### Economic Data Analysis 📉
+ An automated procedure has been implemented to retrieve daily or monthly data on the following metrics: exchange rates, treasury yields, fed funds rate, consumer price index, GDP, industrial production, unemployment rate, consumer sentiment, and producer price index. This data is stored in a database spanning the past decade. Additionally, the system incorporates visualization of the metrics data.
+
+![Searching economic Data](images/image_ui_economic_data.png)
+
+![Visualizing economic Data](images/image_ui_visualize_economic_data.png)

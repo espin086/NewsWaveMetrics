@@ -8,34 +8,37 @@ from get_stock_data import get_daily_stock_data
 from data_transform import DataTransformer
 from file_handler import FileHandler
 from extract_news import extract
+from extract_economic_data import extract_all_economic_data
 from datetime import datetime 
 
 from config import (
     PROCESSED_DATA_PATH,
     RAW_DATA_PATH,
 )
-from load import load_stock_data, load_news_data
+from load import load_stock_data, load_news_data, load_fred_data
 from pandas.api.types import (
     is_categorical_dtype,
     is_datetime64_any_dtype,
     is_numeric_dtype,
     is_object_dtype,
 )
-from ploting_graphs import moving_average_strategy, plot_stock_data, plot_sentiment_counts_per_year, plot_average_sentiment_by_date
+from ploting_graphs import moving_average_strategy, plot_stock_data, plot_sentiment_counts_per_year, plot_average_sentiment_by_date, plot_economic_data
 
 
 for key in [
     "data_fetched",
     "news_data_fetched",
+    "fred_data_fetched",
     "news_query_result",
     "query_result",
     "displayed_data",
     "displayed_news_data",
+    "selected_column"
 ]:
     if key not in st.session_state:
         st.session_state[key] = (
             False
-            if key == "data_fetched" or key == "news_data_fetched"
+            if key in ["data_fetched", "news_data_fetched", "fred_data_fetched"]
             else pd.DataFrame()
         )
 
@@ -75,7 +78,16 @@ def fetch_and_store_news_data(news_topic, start_date, end_date):
     else:
         st.warning("Please enter News Topic")
         return False
-
+    
+def fetch_and_store_fred_data():
+    df = extract_all_economic_data()
+    if not df.empty:
+        load_fred_data(df)
+        st.success("Data fetched and stored successfully.")
+        return True
+    else:
+        st.error("No data available")
+        return False
 
 def query_stock_data(ticker_input):
     try:
@@ -133,6 +145,24 @@ def query_news_data(news_topic):
         st.error(f"An error occurred: {e}")
         return pd.DataFrame()
 
+def query_fred_data():
+    try:
+        # Connect to SQLite database
+        conn = sqlite3.connect(config.DATABASE)
+
+        # Perform SQL query
+        query = f"""
+            SELECT 
+                *
+            FROM fred 
+            ORDER BY date DESC
+        """
+        data = pd.read_sql(query, conn)
+        conn.close()
+        return data
+    except Exception as e:
+        st.error(f"An error occurred: {e}")
+        return pd.DataFrame()
 
 def filter_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     modify = st.checkbox("Add filters to table", key="add_filter")
@@ -204,7 +234,7 @@ with st.sidebar:
         width=350,
     )
     st.title("News Wave Metrics")
-    choice = st.radio("Navigation", ["Lookup Stock Data", "Analyze News Sentiment"])
+    choice = st.radio("Navigation", ["Lookup Stock Data", "Analyze News Sentiment", "Analyze Economic Metrics"])
     st.info(
         "A powerful tool for analyzing news sentiment on both national and local stories, allowing users to correlate these stories with their own uploaded metrics, starting with stock market price data. Stay ahead of the curve and make informed decisions with SentimentSync."
     )
@@ -248,12 +278,6 @@ elif choice == "Analyze News Sentiment":
     if st.button("Analyze News"):
         end_date = date.today()
         start_date = end_date - timedelta(days=365 * config.YEARS_OF_NEWS)
-        # end_date_str = "01/03/2024"
-        # start_date_str = "01/03/2023"
-
-        # # Convert strings to datetime objects
-        # end_date = datetime.strptime(end_date_str, "%d/%m/%Y")
-        # start_date = datetime.strptime(start_date_str, "%d/%m/%Y")
 
         # Format datetime objects
         start_date_formatted = start_date.strftime("%d/%m/%Y")
@@ -275,4 +299,22 @@ elif choice == "Analyze News Sentiment":
             df_for_graph = st.session_state["news_query_result"].copy()
             plot_sentiment_counts_per_year(df_for_graph)
             plot_average_sentiment_by_date(df_for_graph)
-    
+            
+elif choice == "Analyze Economic Metrics":
+    if st.button("Analyze Metrics"):
+        if fetch_and_store_fred_data():
+            st.session_state["fred_data_fetched"] = True
+            st.session_state["fred_query_result"] = query_fred_data()
+        else:
+            st.session_state["fred_data_fetched"] = False
+
+    if st.session_state.get("fred_data_fetched", False):
+        st.write("Economic Metrics Data Table:")
+        st.dataframe(st.session_state["fred_query_result"])
+
+        if not st.session_state["fred_query_result"].empty:
+            df_for_graph = st.session_state["fred_query_result"].copy()
+            columns_to_exclude = ['date']
+            selectable_columns = [col for col in df_for_graph.columns if col not in columns_to_exclude]
+            selected_column = st.selectbox("Select Metric to Display", selectable_columns, key='selected_econ_metric')
+            plot_economic_data(df_for_graph, selected_column)
