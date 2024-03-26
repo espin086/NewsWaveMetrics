@@ -16,7 +16,7 @@ auth_token = os.getenv("TWILIO_AUTH_TOKEN")
 client = Client(account_sid, auth_token)
 
 
-def send_sms(to_number, message):
+def send_sms(message, to_number=config.ALERT_PHONE_NUMBER):
     """
     Send SMS to a phone number using Twilio API
     """
@@ -28,4 +28,4 @@ def send_sms(to_number, message):
 
 if __name__ == "__main__":
     # Send SMS to a phone number
-    send_sms("+13233330336", "Hello from Twilio!")
+    send_sms(message="Have a good day Jackie! This is Python saying hello!")

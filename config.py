@@ -22,7 +22,8 @@ SELECTED_COLUMNS = ["Open", "High", "Low", "Close", "Volume"]
 # === API Configs ===
 News_SEARCH_URL = "https://newsnow.p.rapidapi.com/newsv2"
 News_SEARCH_X_RAPIDAPI_HOST = "newsnow.p.rapidapi.com"
-TWILIO_PHONE_NUMBER = "+13238798975"
+TWILIO_PHONE_NUMBER = "+18559673680"
+ALERT_PHONE_NUMBER = "+13233330336"
 
 
 # Pagination for API calls
