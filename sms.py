@@ -1,9 +1,9 @@
+import argparse
 from twilio.rest import Client
 from dotenv import load_dotenv
 import os
 
 import config
-
 
 # Load environment variables from .env file
 load_dotenv()
@@ -27,5 +27,9 @@ def send_sms(message, to_number=config.ALERT_PHONE_NUMBER):
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Send SMS using Twilio")
+    parser.add_argument("message", type=str, help="Message to send via SMS")
+    args = parser.parse_args()
+
     # Send SMS to a phone number
-    send_sms(message="Have a good day Jackie! This is Python saying hello!")
+    send_sms(message=args.message)

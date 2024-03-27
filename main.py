@@ -9,7 +9,7 @@ from data_transform import DataTransformer
 from file_handler import FileHandler
 from extract_news import extract
 from extract_economic_data import extract_all_economic_data
-from datetime import datetime 
+from datetime import datetime
 
 from config import (
     PROCESSED_DATA_PATH,
@@ -22,7 +22,13 @@ from pandas.api.types import (
     is_numeric_dtype,
     is_object_dtype,
 )
-from ploting_graphs import moving_average_strategy, plot_stock_data, plot_sentiment_counts_per_year, plot_average_sentiment_by_date, plot_economic_data
+from ploting_graphs import (
+    moving_average_strategy,
+    plot_stock_data,
+    plot_sentiment_counts_per_year,
+    plot_average_sentiment_by_date,
+    plot_economic_data,
+)
 
 
 for key in [
@@ -33,7 +39,7 @@ for key in [
     "query_result",
     "displayed_data",
     "displayed_news_data",
-    "selected_column"
+    "selected_column",
 ]:
     if key not in st.session_state:
         st.session_state[key] = (
@@ -78,7 +84,8 @@ def fetch_and_store_news_data(news_topic, start_date, end_date):
     else:
         st.warning("Please enter News Topic")
         return False
-    
+
+
 def fetch_and_store_fred_data():
     df = extract_all_economic_data()
     if not df.empty:
@@ -88,6 +95,7 @@ def fetch_and_store_fred_data():
     else:
         st.error("No data available")
         return False
+
 
 def query_stock_data(ticker_input):
     try:
@@ -145,6 +153,7 @@ def query_news_data(news_topic):
         st.error(f"An error occurred: {e}")
         return pd.DataFrame()
 
+
 def query_fred_data():
     try:
         # Connect to SQLite database
@@ -163,6 +172,7 @@ def query_fred_data():
     except Exception as e:
         st.error(f"An error occurred: {e}")
         return pd.DataFrame()
+
 
 def filter_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     modify = st.checkbox("Add filters to table", key="add_filter")
@@ -228,93 +238,114 @@ def filter_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-with st.sidebar:
-    st.image(
-        "https://www.fidelity.co.uk/media/filer_public_thumbnails/PI%20UK/images/sharecast/stocks-hero.jpg__1200x535_q85_subsampling-2.jpg",
-        width=350,
-    )
-    st.title("News Wave Metrics")
-    choice = st.radio("Navigation", ["Lookup Stock Data", "Analyze News Sentiment", "Analyze Economic Metrics"])
-    st.info(
-        "A powerful tool for analyzing news sentiment on both national and local stories, allowing users to correlate these stories with their own uploaded metrics, starting with stock market price data. Stay ahead of the curve and make informed decisions with SentimentSync."
-    )
+def main():
 
-if choice == "Lookup Stock Data":
-    ticker_input = st.text_input("Enter the Ticker Symbol:", key="ticker_input")
-
-    if st.button("Analyze Stocks"):
-        end_date = date.today()
-        start_date = end_date - timedelta(days=365 * config.YEARS_OF_NEWS)
-        if ticker_input and fetch_and_store_stock_data(
-            ticker_input, start_date, end_date
-        ):
-            st.session_state["data_fetched"] = True
-            st.session_state["query_result"] = query_stock_data(ticker_input)
-
-    if st.session_state["data_fetched"]:
-        # Apply filters to the dataframe for display
-        st.session_state["displayed_data"] = filter_dataframe(
-            st.session_state["query_result"]
+    with st.sidebar:
+        st.image(
+            "https://www.fidelity.co.uk/media/filer_public_thumbnails/PI%20UK/images/sharecast/stocks-hero.jpg__1200x535_q85_subsampling-2.jpg",
+            width=350,
         )
-        st.write("Filtered Table:")
-        st.dataframe(st.session_state["displayed_data"])
-
-        # Display moving average window inputs above the graph, in the main page area
-        st.write("Graph Controls:")
-        short_window = st.slider("Short-term window", 1, 50, 10, key="short_window_new")
-        long_window = st.slider("Long-term window", 1, 200, 50, key="long_window_new")
-
-        # Assuming you want to use the original (unfiltered) dataset for the graph
-        if not st.session_state["query_result"].empty:
-            df_for_graph = st.session_state["query_result"].copy()
-            df_for_graph["Date"] = pd.to_datetime(df_for_graph["Date"])
-            df_for_graph.set_index("Date", inplace=True)
-            signals = moving_average_strategy(df_for_graph, short_window, long_window)
-            plot_stock_data(df_for_graph, signals)
-
-elif choice == "Analyze News Sentiment":
-    search_input = st.text_input("Enter the News Topic:", key="search_input")
-
-    if st.button("Analyze News"):
-        end_date = date.today()
-        start_date = end_date - timedelta(days=365 * config.YEARS_OF_NEWS)
-
-        # Format datetime objects
-        start_date_formatted = start_date.strftime("%d/%m/%Y")
-        end_date_formatted = end_date.strftime("%d/%m/%Y")
-        if search_input and fetch_and_store_news_data(
-            search_input, start_date_formatted, end_date_formatted
-        ):
-            st.session_state["news_data_fetched"] = True
-            st.session_state["news_query_result"] = query_news_data(search_input)
-
-    if st.session_state["news_data_fetched"]:
-        st.session_state["displayed_news_data"] = filter_dataframe(
-            st.session_state["news_query_result"]
+        st.title("News Wave Metrics")
+        choice = st.radio(
+            "Navigation",
+            ["Lookup Stock Data", "Analyze News Sentiment", "Analyze Economic Metrics"],
         )
-        st.write("Filtered Table:")
-        st.dataframe(st.session_state["displayed_news_data"])
+        st.info(
+            "A powerful tool for analyzing news sentiment on both national and local stories, allowing users to correlate these stories with their own uploaded metrics, starting with stock market price data. Stay ahead of the curve and make informed decisions with SentimentSync."
+        )
 
-        if not st.session_state["news_query_result"].empty:
-            df_for_graph = st.session_state["news_query_result"].copy()
-            plot_sentiment_counts_per_year(df_for_graph)
-            plot_average_sentiment_by_date(df_for_graph)
-            
-elif choice == "Analyze Economic Metrics":
-    if st.button("Analyze Metrics"):
-        if fetch_and_store_fred_data():
-            st.session_state["fred_data_fetched"] = True
-            st.session_state["fred_query_result"] = query_fred_data()
-        else:
-            st.session_state["fred_data_fetched"] = False
+    if choice == "Lookup Stock Data":
+        ticker_input = st.text_input("Enter the Ticker Symbol:", key="ticker_input")
 
-    if st.session_state.get("fred_data_fetched", False):
-        st.write("Economic Metrics Data Table:")
-        st.dataframe(st.session_state["fred_query_result"])
+        if st.button("Analyze Stocks"):
+            end_date = date.today()
+            start_date = end_date - timedelta(days=365 * config.YEARS_OF_NEWS)
+            if ticker_input and fetch_and_store_stock_data(
+                ticker_input, start_date, end_date
+            ):
+                st.session_state["data_fetched"] = True
+                st.session_state["query_result"] = query_stock_data(ticker_input)
 
-        if not st.session_state["fred_query_result"].empty:
-            df_for_graph = st.session_state["fred_query_result"].copy()
-            columns_to_exclude = ['date']
-            selectable_columns = [col for col in df_for_graph.columns if col not in columns_to_exclude]
-            selected_column = st.selectbox("Select Metric to Display", selectable_columns, key='selected_econ_metric')
-            plot_economic_data(df_for_graph, selected_column)
+        if st.session_state["data_fetched"]:
+            # Apply filters to the dataframe for display
+            st.session_state["displayed_data"] = filter_dataframe(
+                st.session_state["query_result"]
+            )
+            st.write("Filtered Table:")
+            st.dataframe(st.session_state["displayed_data"])
+
+            # Display moving average window inputs above the graph, in the main page area
+            st.write("Graph Controls:")
+            short_window = st.slider(
+                "Short-term window", 1, 50, 10, key="short_window_new"
+            )
+            long_window = st.slider(
+                "Long-term window", 1, 200, 50, key="long_window_new"
+            )
+
+            # Assuming you want to use the original (unfiltered) dataset for the graph
+            if not st.session_state["query_result"].empty:
+                df_for_graph = st.session_state["query_result"].copy()
+                df_for_graph["Date"] = pd.to_datetime(df_for_graph["Date"])
+                df_for_graph.set_index("Date", inplace=True)
+                signals = moving_average_strategy(
+                    df_for_graph, short_window, long_window
+                )
+                plot_stock_data(df_for_graph, signals)
+
+    elif choice == "Analyze News Sentiment":
+        search_input = st.text_input("Enter the News Topic:", key="search_input")
+
+        if st.button("Analyze News"):
+            end_date = date.today()
+            start_date = end_date - timedelta(days=365 * config.YEARS_OF_NEWS)
+
+            # Format datetime objects
+            start_date_formatted = start_date.strftime("%d/%m/%Y")
+            end_date_formatted = end_date.strftime("%d/%m/%Y")
+            if search_input and fetch_and_store_news_data(
+                search_input, start_date_formatted, end_date_formatted
+            ):
+                st.session_state["news_data_fetched"] = True
+                st.session_state["news_query_result"] = query_news_data(search_input)
+
+        if st.session_state["news_data_fetched"]:
+            st.session_state["displayed_news_data"] = filter_dataframe(
+                st.session_state["news_query_result"]
+            )
+            st.write("Filtered Table:")
+            st.dataframe(st.session_state["displayed_news_data"])
+
+            if not st.session_state["news_query_result"].empty:
+                df_for_graph = st.session_state["news_query_result"].copy()
+                plot_sentiment_counts_per_year(df_for_graph)
+                plot_average_sentiment_by_date(df_for_graph)
+
+    elif choice == "Analyze Economic Metrics":
+        if st.button("Analyze Metrics"):
+            if fetch_and_store_fred_data():
+                st.session_state["fred_data_fetched"] = True
+                st.session_state["fred_query_result"] = query_fred_data()
+            else:
+                st.session_state["fred_data_fetched"] = False
+
+        if st.session_state.get("fred_data_fetched", False):
+            st.write("Economic Metrics Data Table:")
+            st.dataframe(st.session_state["fred_query_result"])
+
+            if not st.session_state["fred_query_result"].empty:
+                df_for_graph = st.session_state["fred_query_result"].copy()
+                columns_to_exclude = ["date"]
+                selectable_columns = [
+                    col for col in df_for_graph.columns if col not in columns_to_exclude
+                ]
+                selected_column = st.selectbox(
+                    "Select Metric to Display",
+                    selectable_columns,
+                    key="selected_econ_metric",
+                )
+                plot_economic_data(df_for_graph, selected_column)
+
+
+if __name__ == "__main__":
+    main()

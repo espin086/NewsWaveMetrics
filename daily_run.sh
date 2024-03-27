@@ -1,0 +1,1 @@
+cd /Users/jjespinoza/Documents/repos/NewsWaveMetrics && source .venv/bin/activate && python daily_fed_data.py --fetch

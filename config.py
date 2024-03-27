@@ -4,6 +4,7 @@ import os
 
 # === General Configs ===
 LOGGING_LEVEL = logging.INFO
+ENVIRONMENT_PATH = "/Users/jjespinoza/Documents/repos/NewsWaveMetrics/.env"
 
 # === Data Configs ===
 CWD_PATH = Path(os.getcwd())
