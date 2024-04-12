@@ -1,3 +1,8 @@
+# Ignoring Python Notebooks
+*.ipynb
+
+
+
 # SQLITE databases
 
 *.db
