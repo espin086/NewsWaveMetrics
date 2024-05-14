@@ -1,1 +1,2 @@
-pip install statsmodels
+statsmodels
+yfinance
