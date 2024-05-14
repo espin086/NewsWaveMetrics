@@ -7,7 +7,7 @@ def fetch_info(ticker):
     return stock.info
 
 
-def fetch_history(ticker, interval="1m"):
+def fetch_history(ticker, interval="1d"):
     stock = yf.Ticker(ticker)
     return stock.history(interval=interval)
 
@@ -15,16 +15,6 @@ def fetch_history(ticker, interval="1m"):
 def fetch_actions(ticker):
     stock = yf.Ticker(ticker)
     return stock.actions
-
-
-def fetch_dividends(ticker):
-    stock = yf.Ticker(ticker)
-    return stock.dividends
-
-
-def fetch_splits(ticker):
-    stock = yf.Ticker(ticker)
-    return stock.splits
 
 
 def fetch_financials(ticker):
@@ -65,8 +55,6 @@ def setup_argparse():
             "info",
             "history",
             "actions",
-            "dividends",
-            "splits",
             "financials",
             "holders",
             "recommendations",
@@ -82,8 +70,6 @@ def main():
         "info": fetch_info,
         "history": fetch_history,
         "actions": fetch_actions,
-        "dividends": fetch_dividends,
-        "splits": fetch_splits,
         "financials": fetch_financials,
         "holders": fetch_holders,
         "recommendations": fetch_recommendations,
