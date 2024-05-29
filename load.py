@@ -2,6 +2,8 @@ import config
 import logging
 import pprint
 from file_handler import FileHandler
+import get_stock_data
+import extract_economic_data
 from SQLiteHandler import (
     create_stock_table,
     upload_stock_to_db,
@@ -48,8 +50,32 @@ def load_fred_data(fred_data):
     """
     logging.info("Loading Function Initiated")
     create_fred_table()
+
     upload_fred_to_db(df=fred_data)
 
 
+def main():
+
+    # Loading All Stock Data
+    TICKERS = config.TICKERS
+    for ticker in TICKERS:
+        logging.info("Extracting data for ticker: %s", ticker)
+        stock_data = get_stock_data.get_daily_stock_data(
+            tickerSymbol=ticker,
+            start_date=config.OBSERVATION_START,
+            end_date=config.OBSERVATION_END,
+        )
+        load_stock_data(stock_data)
+        logging.info("Data for ticker: %s loaded successfully", ticker)
+
+    # Load all Federal Reserve Economic Data
+    logging.info("Extracting all economic data")
+    df_all_econ = extract_economic_data.extract_all_economic_data()
+    load_fred_data(df_all_econ)
+    logging.info("All economic data loaded successfully")
+
+    # Load all news data
+
+
 if __name__ == "__main__":
-    load_news_data("Federal Reserve")
+    main()

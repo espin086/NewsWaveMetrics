@@ -2,6 +2,8 @@ import logging
 from pathlib import Path
 import os
 import yfinance as yf
+import pandas as pd
+import datetime
 
 # === General Configs ===
 LOGGING_LEVEL = logging.INFO
@@ -46,10 +48,10 @@ ECONOMIC_METRICS_IDS = [
 ]
 
 OBSERVATION_START = "2014-01-01"
+OBSERVATION_END = datetime.date.today().strftime("%Y-%m-%d")
 
 # Get the list of S&P 500 tickers
-SP500_TICKERS = yf.Tickers("^GSPC").tickers
+tickers_df = pd.read_csv("tickers.csv")
+TICKERS = tickers_df["Symbol"].tolist()
 
-# Print the list of stocks
-for ticker in SP500_TICKERS:
-    print(ticker.ticker)
+# List of News Topics to Search For
