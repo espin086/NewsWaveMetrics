@@ -1,6 +1,7 @@
 import logging
 from pathlib import Path
 import os
+import yfinance as yf
 
 # === General Configs ===
 LOGGING_LEVEL = logging.INFO
@@ -45,3 +46,10 @@ ECONOMIC_METRICS_IDS = [
 ]
 
 OBSERVATION_START = "2014-01-01"
+
+# Get the list of S&P 500 tickers
+SP500_TICKERS = yf.Tickers("^GSPC").tickers
+
+# Print the list of stocks
+for ticker in SP500_TICKERS:
+    print(ticker.ticker)

@@ -16,6 +16,7 @@ from config import (
     RAW_DATA_PATH,
 )
 from load import load_stock_data, load_news_data, load_fred_data
+
 from pandas.api.types import (
     is_categorical_dtype,
     is_datetime64_any_dtype,
@@ -52,6 +53,7 @@ file_handler = FileHandler(raw_path=RAW_DATA_PATH, processed_path=PROCESSED_DATA
 
 
 def run_transform():
+    """Run the data transformation pipeline."""
     DataTransformer(
         raw_path=RAW_DATA_PATH,
         processed_path=PROCESSED_DATA_PATH,
@@ -60,6 +62,7 @@ def run_transform():
 
 
 def fetch_and_store_stock_data(ticker, start_date, end_date):
+    """Fetch and store stock data for a given ticker."""
     stocks_data = get_daily_stock_data(ticker, start_date, end_date)
     if not stocks_data.empty:
         load_stock_data(stocks_data)
@@ -71,6 +74,7 @@ def fetch_and_store_stock_data(ticker, start_date, end_date):
 
 
 def fetch_and_store_news_data(news_topic, start_date, end_date):
+    """Fetch and store news data for a given topic."""
 
     if news_topic:
         extract(news_topic, start_date, end_date)
@@ -87,6 +91,7 @@ def fetch_and_store_news_data(news_topic, start_date, end_date):
 
 
 def fetch_and_store_fred_data():
+    """Fetch and store economic data."""
     df = extract_all_economic_data()
     if not df.empty:
         load_fred_data(df)
@@ -98,6 +103,7 @@ def fetch_and_store_fred_data():
 
 
 def query_stock_data(ticker_input):
+    """Query stock data for a given ticker."""
     try:
         # Connect to SQLite database
         conn = sqlite3.connect(config.DATABASE)
@@ -125,6 +131,7 @@ def query_stock_data(ticker_input):
 
 
 def query_news_data(news_topic):
+    """Query news data for a given topic."""
     try:
         # Connect to SQLite database
         conn = sqlite3.connect(config.DATABASE)
@@ -155,6 +162,7 @@ def query_news_data(news_topic):
 
 
 def query_fred_data():
+    """Query economic data."""
     try:
         # Connect to SQLite database
         conn = sqlite3.connect(config.DATABASE)
@@ -175,6 +183,7 @@ def query_fred_data():
 
 
 def filter_dataframe(df: pd.DataFrame) -> pd.DataFrame:
+    """Filter a DataFrame based on user inputs."""
     modify = st.checkbox("Add filters to table", key="add_filter")
     if not modify:
         return df
@@ -239,6 +248,7 @@ def filter_dataframe(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def main():
+    """Main function for the Streamlit app."""
 
     with st.sidebar:
         st.image(

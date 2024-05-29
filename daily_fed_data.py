@@ -11,6 +11,7 @@ logging.basicConfig(level=logging.INFO)
 
 
 def fetch_and_store_fred_data():
+    """Fetch and store Federal Reserve data."""
     df = extract_all_economic_data()
     if not df.empty:
         load_fred_data(df)

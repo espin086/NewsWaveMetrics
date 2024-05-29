@@ -1,6 +1,3 @@
 statsmodels
 yfinance
-<<<<<<< HEAD
 prophet
-=======
->>>>>>> 90ab092af08e1c6e618456ceb48e08ea9cb4c934
