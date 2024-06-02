@@ -256,6 +256,12 @@ def main():
             width=350,
         )
         st.title("News Wave Metrics")
+
+        # Getting the ticker symbol we are going to analyze
+        ticker_input = st.selectbox(
+            "Select the Ticker Symbol:", config.TICKERS, key="ticker_input"
+        )
+
         choice = st.radio(
             "Navigation",
             ["Lookup Stock Data", "Analyze News Sentiment", "Analyze Economic Metrics"],
@@ -263,11 +269,6 @@ def main():
         st.info(
             "A powerful tool for analyzing news sentiment on both national and local stories, allowing users to correlate these stories with their own uploaded metrics, starting with stock market price data. Stay ahead of the curve and make informed decisions with SentimentSync."
         )
-
-    # Getting the ticker symbol we are going to analyze
-    ticker_input = st.selectbox(
-        "Select the Ticker Symbol:", config.TICKERS, key="ticker_input"
-    )
 
     if choice == "Lookup Stock Data":
 
