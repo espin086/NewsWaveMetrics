@@ -3,21 +3,25 @@ import yfinance as yf
 
 
 def fetch_info(ticker):
+    "Get info on Stock"
     stock = yf.Ticker(ticker)
     return stock.info
 
 
 def fetch_history(ticker, interval="1d"):
+    "Get recent histor"
     stock = yf.Ticker(ticker)
     return stock.history(interval=interval)
 
 
 def fetch_actions(ticker):
+    "Major actions"
     stock = yf.Ticker(ticker)
     return stock.actions
 
 
 def fetch_financials(ticker):
+    "Getting the Financials"
     stock = yf.Ticker(ticker)
     return {
         "income_statement": stock.income_stmt,
@@ -30,6 +34,7 @@ def fetch_financials(ticker):
 
 
 def fetch_holders(ticker):
+    "Getting major holders"
     stock = yf.Ticker(ticker)
     return {
         "major_holders": stock.major_holders,
@@ -39,6 +44,7 @@ def fetch_holders(ticker):
 
 
 def fetch_recommendations(ticker):
+    """Analyst Recommendations"""
     stock = yf.Ticker(ticker)
     return {
         "recommendations_summary": stock.recommendations_summary,
@@ -47,6 +53,7 @@ def fetch_recommendations(ticker):
 
 
 def setup_argparse():
+    """This is the argparse"""
     parser = argparse.ArgumentParser(description="Fetch stock data from Yahoo Finance.")
     parser.add_argument("ticker", type=str, help="Stock ticker symbol.")
     parser.add_argument(
