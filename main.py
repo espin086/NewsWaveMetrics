@@ -264,10 +264,12 @@ def main():
             "A powerful tool for analyzing news sentiment on both national and local stories, allowing users to correlate these stories with their own uploaded metrics, starting with stock market price data. Stay ahead of the curve and make informed decisions with SentimentSync."
         )
 
+    # Getting the ticker symbol we are going to analyze
+    ticker_input = st.selectbox(
+        "Select the Ticker Symbol:", config.TICKERS, key="ticker_input"
+    )
+
     if choice == "Lookup Stock Data":
-        ticker_input = st.selectbox(
-            "Select the Ticker Symbol:", config.TICKERS, key="ticker_input"
-        )
 
         if st.button("Analyze Stocks"):
             end_date = date.today()
@@ -306,20 +308,20 @@ def main():
                 plot_stock_data(df_for_graph, signals)
 
     elif choice == "Analyze News Sentiment":
-        search_input = st.text_input("Enter the News Topic:", key="search_input")
+        search_input = f"Stock News for {ticker_input}"
 
-        if st.button("Analyze News"):
-            end_date = date.today()
-            start_date = end_date - timedelta(days=365 * config.YEARS_OF_NEWS)
+        # if st.button("Analyze News"):
+        end_date = date.today()
+        start_date = end_date - timedelta(days=365 * config.YEARS_OF_NEWS)
 
-            # Format datetime objects
-            start_date_formatted = start_date.strftime("%d/%m/%Y")
-            end_date_formatted = end_date.strftime("%d/%m/%Y")
-            if search_input and fetch_and_store_news_data(
-                search_input, start_date_formatted, end_date_formatted
-            ):
-                st.session_state["news_data_fetched"] = True
-                st.session_state["news_query_result"] = query_news_data(search_input)
+        # Format datetime objects
+        start_date_formatted = start_date.strftime("%d/%m/%Y")
+        end_date_formatted = end_date.strftime("%d/%m/%Y")
+        if search_input and fetch_and_store_news_data(
+            search_input, start_date_formatted, end_date_formatted
+        ):
+            st.session_state["news_data_fetched"] = True
+            st.session_state["news_query_result"] = query_news_data(search_input)
 
         if st.session_state["news_data_fetched"]:
             st.session_state["displayed_news_data"] = filter_dataframe(
