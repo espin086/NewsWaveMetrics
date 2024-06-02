@@ -265,7 +265,9 @@ def main():
         )
 
     if choice == "Lookup Stock Data":
-        ticker_input = st.text_input("Enter the Ticker Symbol:", key="ticker_input")
+        ticker_input = st.selectbox(
+            "Select the Ticker Symbol:", config.TICKERS, key="ticker_input"
+        )
 
         if st.button("Analyze Stocks"):
             end_date = date.today()
@@ -332,12 +334,12 @@ def main():
                 plot_average_sentiment_by_date(df_for_graph)
 
     elif choice == "Analyze Economic Metrics":
-        if st.button("Analyze Metrics"):
-            if fetch_and_store_fred_data():
-                st.session_state["fred_data_fetched"] = True
-                st.session_state["fred_query_result"] = query_fred_data()
-            else:
-                st.session_state["fred_data_fetched"] = False
+        # if st.button("Analyze Metrics"):
+        if fetch_and_store_fred_data():
+            st.session_state["fred_data_fetched"] = True
+            st.session_state["fred_query_result"] = query_fred_data()
+        else:
+            st.session_state["fred_data_fetched"] = False
 
         if st.session_state.get("fred_data_fetched", False):
             st.write("Economic Metrics Data Table:")
