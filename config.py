@@ -19,6 +19,10 @@ DATABASE = "news_wave_metrics.db"
 TABLE_STOCK_DATA = "stock_data"
 TABLE_NEWS_DATA = "ai_safety_news"
 TABLE_FRED_DATA = "fred"
+TABLE_TRAINING_DATA = "training_dataset"
+
+# === Training Dataset Configs ===
+TRAINING_DATA_PATH = Path(f"{CWD_PATH}/temp/data/training").resolve()
 
 # === Stock Data Required Columns ===
 SELECTED_COLUMNS = ["Open", "High", "Low", "Close", "Volume"]
