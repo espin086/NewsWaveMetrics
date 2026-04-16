@@ -173,7 +173,10 @@ def add_technical_indicators(df: pd.DataFrame) -> pd.DataFrame:
     df["atr_14"] = true_range.rolling(window=14).mean()
 
     # On-Balance Volume (OBV)
-    df["obv"] = (np.sign(close.diff()) * volume).fillna(0).cumsum()
+    # The first row has no price change, so it contributes 0 volume to OBV
+    # (np.sign(NaN) = NaN; multiplying by volume gives NaN, then filled to 0).
+    price_direction = np.sign(close.diff()).fillna(0)
+    df["obv"] = (price_direction * volume).cumsum()
 
     # Rate of Change (ROC)
     for window in [5, 10]:
@@ -195,7 +198,10 @@ def add_target_variables(df: pd.DataFrame) -> pd.DataFrame:
     * ``target_return``    – next-day percentage return (float)
     """
     next_close = df["closing_price"].shift(-1)
+    # Int64 (nullable integer) is used so the last row's NaN is preserved
+    # until clean_dataset() removes it; standard int cannot represent NaN.
     df["target_direction"] = (next_close > df["closing_price"]).astype("Int64")
+    # closing_price is assumed non-zero for exchange-listed stocks.
     df["target_return"] = (next_close / df["closing_price"]) - 1
     return df
 
@@ -267,13 +273,18 @@ def save_to_csv(df: pd.DataFrame, ticker: str) -> None:
 
 
 def save_to_database(df: pd.DataFrame, ticker: str) -> None:
-    """Append *df* (tagged with *ticker*) to the training dataset table."""
+    """Append *df* (tagged with *ticker*) to the training dataset table.
+
+    ``pandas.DataFrame.to_sql`` with ``method='multi'`` is used for reasonably
+    efficient batch inserts.  For very large datasets (millions of rows) a
+    dedicated ETL tool or bulk-copy approach would be faster.
+    """
     conn = sqlite3.connect(config.DATABASE)
     df_with_ticker = df.copy()
     df_with_ticker.insert(0, "ticker", ticker)
     df_with_ticker["date"] = df_with_ticker["date"].astype(str)
     df_with_ticker.to_sql(
-        config.TABLE_TRAINING_DATA, conn, if_exists="append", index=False
+        config.TABLE_TRAINING_DATA, conn, if_exists="append", index=False, method="multi"
     )
     conn.close()
     logging.info(
